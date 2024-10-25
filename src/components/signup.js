@@ -14,7 +14,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className="signup-container">
       <div className="logo-section">
         <img src={logo} alt="Logo" className="logo" />
         <h1><span style={{ color: 'blue' }}>DOCU TRACK</span></h1>
