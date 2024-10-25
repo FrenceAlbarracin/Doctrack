@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import './login.css'; // Import the CSS file for styling
 import logo from '../assets/logo.png';
 import googleLogo from '../assets/google.webp'; // Import the Google logo
@@ -7,14 +8,18 @@ import { GoogleLogin } from 'react-google-login'; // Import GoogleLogin
 import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
 
 const Login = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
   const recaptchaRef = React.useRef(); // Create a ref for the reCAPTCHA
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false); // State to track reCAPTCHA verification
 
   const responseGoogle = (response) => {
-    console.log(response); // Handle the response from Google
-    // Reset reCAPTCHA after successful login
-    recaptchaRef.current.reset(); // Reset the reCAPTCHA
-    setIsCaptchaVerified(false); // Reset the captcha verification state
+    console.log("Google response:", response); // Log the response from Google
+    if (response.profileObj) {
+      // Only navigate if the response is valid
+      recaptchaRef.current.reset(); // Reset the reCAPTCHA
+      setIsCaptchaVerified(false); // Reset the captcha verification state
+      navigate('/dashboard'); // Redirect to the dashboard
+    }
   };
 
   const handleCaptchaChange = (value) => {
@@ -29,12 +34,11 @@ const Login = () => {
       return;
     }
     
-    // Proceed with your login logic here
     console.log("Form submitted with reCAPTCHA value:", recaptchaValue);
-    // Add your login API call here
-    // Reset reCAPTCHA after form submission
     recaptchaRef.current.reset(); // Reset the reCAPTCHA
     setIsCaptchaVerified(false); // Reset the captcha verification state
+    // Add your login API call here
+    navigate('/dashboard'); // Redirect to the dashboard
   };
 
   return (

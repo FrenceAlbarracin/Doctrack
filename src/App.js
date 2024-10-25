@@ -2,10 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/login';
 import Signup from './components/signup';
-import Dashboard from './components/dashboard/dashboard';
+import Dashboard from './components/dashboard/DashboardLayout';
 import ForgotPassword from './components/ForgotPassword';
 import EnterCode from './components/EnterCode';
-import ChangePassword from './components/ChangePassword'; // Import the ChangePassword component
+import ChangePassword from './components/ChangePassword';
+
 
 const App = () => {
   return (
