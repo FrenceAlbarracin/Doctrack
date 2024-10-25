@@ -11,16 +11,15 @@ body {
 }
 
 /* Container for the entire login page */
-.login-container {
+.signup-container {
     display: flex;
     height: 100vh;
-
+    justify-content: flex-end; /* Align content to the right */
 }
 
 /* Left section for the logo */
 .logo-section {
     flex: 1;
-
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -43,8 +42,8 @@ body {
 .form-section {
     flex: 1;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-end;
+   
    
 }
 

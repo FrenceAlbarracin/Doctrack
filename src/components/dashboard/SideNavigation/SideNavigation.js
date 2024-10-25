@@ -95,6 +95,12 @@ const SideNavigation = () => {
       setError(`Error loading calendar events: ${err.message || JSON.stringify(err)}`);
     });
   };
+  const [recipients, setRecipients] = useState([
+    'SSC',
+    'SBO',
+    'COMSOC',
+    // Add more recipients as needed
+  ]);
 
   const handleItemClick = (label) => {
     if (label === "Dashboard") {
@@ -107,6 +113,12 @@ const SideNavigation = () => {
 
   const closeModal = () => {
     setModalOpen(false);
+  };
+
+  const handleSubmit = () => {
+    // Add your form submission logic here
+    console.log('Form submitted');
+    closeModal();
   };
 
   return (
@@ -148,21 +160,40 @@ const SideNavigation = () => {
       ))}
       
       {/* Modal */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title={modalContent}>
-        <label>Serial Number</label>
-        <input type="text" placeholder="Enter Serial Number" />
-        
-        <label>Document Name</label>
-        <input type="text" placeholder="Enter Document Name" />
-        
-        <label>Recipient</label>
-        <input type="text" placeholder="Enter Recipient" />
-        
-        <label>User ID</label>
-        <input type="text" placeholder="Enter User ID" />
-        
-        <label>Remarks</label>
-        <textarea placeholder="Enter remarks..."></textarea>
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="Transfer In">
+        <div className={styles.modalContent}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Serial Number</label>
+            <input type="text" placeholder="Enter Serial Number" className={styles.input} />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Document Name</label>
+            <input type="text" placeholder="Enter Document Name" className={styles.input} />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Recipient</label>
+            <select className={styles.select}>
+              <option value="">Select Recipient</option>
+              {recipients.map((recipient, index) => (
+                <option key={index} value={recipient}>{recipient}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label className={styles.label}>User ID</label>
+            <input type="text" placeholder="Enter User ID" className={styles.input} />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Remarks</label>
+            <textarea placeholder="Enter remarks..." className={styles.textarea}></textarea>
+          </div>
+          
+          <button className={styles.submitButton} onClick={handleSubmit}>Submit</button>
+        </div>
       </Modal>
     </nav>
   );
