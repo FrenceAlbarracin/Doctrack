@@ -1,98 +1,127 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
-import './login.css'; // Import the CSS file for styling
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './login.css';
 import logo from '../assets/logo.png';
-import googleLogo from '../assets/google.webp'; // Import the Google logo
+import googleLogo from '../assets/google.webp';
 import { Link } from 'react-router-dom';
-import { GoogleLogin } from 'react-google-login'; // Import GoogleLogin
-import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
+import ReCAPTCHA from 'react-google-recaptcha';
+import axios from 'axios'; // Make sure to install axios: npm install axios
 
-const Login = () => {
-  const navigate = useNavigate(); // Initialize useNavigate
-  const recaptchaRef = React.useRef(); // Create a ref for the reCAPTCHA
-  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false); // State to track reCAPTCHA verification
+const GoogleLoginButton = ({ isCaptchaVerified }) => {
+  const navigate = useNavigate();
+  
+  const login = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      console.log("Google Sign-In Successful:", codeResponse);
+      try {
+        // Get user info using the access token
+        const userInfo = await axios.get(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          { headers: { Authorization: `Bearer ${codeResponse.access_token}` } }
+        );
+        
+        console.log("User Info:", userInfo.data);
 
-  const responseGoogle = (response) => {
-    console.log("Google response:", response); // Log the response from Google
-    if (response.profileObj) {
-      // Only navigate if the response is valid
-      recaptchaRef.current.reset(); // Reset the reCAPTCHA
-      setIsCaptchaVerified(false); // Reset the captcha verification state
-      navigate('/dashboard'); // Redirect to the dashboard
+        // Here, you would typically:
+        // 1. Send this data to your backend
+        // 2. Create or update the user in your database
+        // 3. Get a session token or JWT from your backend
+        // 4. Store that token in localStorage or a secure cookie
+
+        // For example:
+        // const response = await axios.post('your-backend-url/auth/google', userInfo.data);
+        // localStorage.setItem('token', response.data.token);
+
+        // After successful authentication and storing the token
+        console.log("Authentication successful, navigating to dashboard...");
+        navigate('/dashboard');
+      } catch (error) {
+        console.error("Error during Google authentication:", error);
+        alert("An error occurred during sign in. Please try again.");
+      }
+    },
+    onError: (error) => {
+      console.error('Google Sign-In Failed:', error);
+      alert("Login failed. Please try again and ensure you complete the sign-in process.");
+    },
+  });
+
+  const handleClick = () => {
+    if (!isCaptchaVerified) {
+      alert("Please complete the reCAPTCHA before signing in with Google");
+      return;
     }
+    login();
   };
 
+  return (
+    <button onClick={handleClick} className="google-login-btn" disabled={!isCaptchaVerified}>
+      <img src={googleLogo} alt="Google Logo" style={{ width: '20px', marginRight: '10px' }} />
+      Sign in with Google
+    </button>
+  );
+};
+
+const Login = () => {
+  const navigate = useNavigate();
+  const recaptchaRef = useRef();
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+
   const handleCaptchaChange = (value) => {
-    setIsCaptchaVerified(!!value); // Set state to true when reCAPTCHA is verified
+    setIsCaptchaVerified(!!value);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const recaptchaValue = recaptchaRef.current.getValue(); // Get the reCAPTCHA value
-    if (!recaptchaValue) {
-      alert("Please complete the reCAPTCHA"); // Alert if reCAPTCHA is not completed
+    if (!isCaptchaVerified) {
+      alert("Please complete the reCAPTCHA");
       return;
     }
     
-    console.log("Form submitted with reCAPTCHA value:", recaptchaValue);
-    recaptchaRef.current.reset(); // Reset the reCAPTCHA
-    setIsCaptchaVerified(false); // Reset the captcha verification state
-    // Add your login API call here
-    navigate('/dashboard'); // Redirect to the dashboard
+    console.log("Form submitted with reCAPTCHA verified");
+    // Add your regular login API call here
+    navigate('/dashboard');
   };
 
   return (
-    <div className="login-container">
-      <div className="logo-section">
-        <img src={logo} alt="Logo" className="logo" />
-        <h1><span style={{ color: 'blue' }}>DOCU TRACK</span></h1>
-      </div>
-      <div className="form-section">
-        <div className="form-content">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ color: 'skyblue' }}>Welcome to <span style={{ color: '#448EE4', fontWeight: 'bold' }}>DocuTrack</span></h2>
-            <p style={{ fontSize: '14px' }}><br />No account?<br /> <Link to="/sign-up" className="signup-link">Sign Up</Link></p>
-          </div>
-          <h1>Sign in</h1>
-          
-          {/* Google Login Button */}
-          <GoogleLogin
-            clientId="948616457649-9m9i5mjm96aq76cgbk96t1rk0guo137k.apps.googleusercontent.com" // Replace with your client ID
-            buttonText="Sign in with Google"
-            onSuccess={responseGoogle} // Handle success
-            onFailure={responseGoogle} // Handle failure
-            cookiePolicy={'single_host_origin'}
-            render={renderProps => (
-              <button 
-                className="google-btn" 
-                onClick={isCaptchaVerified ? renderProps.onClick : null} // Disable if captcha not verified
-                disabled={!isCaptchaVerified} // Disable button if captcha not verified
-              >
-                <img src={googleLogo} alt="Google Icon" className="google-icon" />
-                Sign in with Google
-              </button>
-            )}
-          />
-      
-          <form onSubmit={handleSubmit}> {/* Update form to handle submit */}
-            <label>Enter your username or email address</label>
-            <input type="text" placeholder="Username or email address" required />
-            <br />
-            <label>Enter your Password</label>
-            <input type="password" placeholder="Password" required />
-       
-            <ReCAPTCHA
-              sitekey="6LdeY2oqAAAAAGSi81scus4rs5Rz8WM8yeWcdfrZ" // Replace with your reCAPTCHA site key
-              ref={recaptchaRef} // Attach the ref
-              onChange={handleCaptchaChange} // Handle reCAPTCHA change
-            />
+    <GoogleOAuthProvider clientId="948616457649-9m9i5mjm96aq76cgbk96t1rk0guo137k.apps.googleusercontent.com">
+      <div className="login-container">
+        <div className="logo-section">
+          <img src={logo} alt="Logo" className="logo" />
+          <h1><span style={{ color: 'blue' }}>DOCU TRACK</span></h1>
+        </div>
+        <div className="form-section">
+          <div className="form-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ color: 'skyblue' }}>Welcome to <span style={{ color: '#448EE4', fontWeight: 'bold' }}>DocuTrack</span></h2>
+              <p style={{ fontSize: '14px' }}><br />No account?<br /> <Link to="/sign-up" className="signup-link">Sign Up</Link></p>
+            </div>
+            <h1>Sign in</h1>
             
-            <Link to="/forgot-password" className="forgot-password">Forgotten Password?</Link>
-            <button type="submit" className="sign-in-btn">Sign in</button>
-          </form>
+            <GoogleLoginButton isCaptchaVerified={isCaptchaVerified} />
+            
+            <form onSubmit={handleSubmit}>
+              <label>Enter your username or email address</label>
+              <input type="text" placeholder="Username or email address" required />
+              <br />
+              <label>Enter your Password</label>
+              <input type="password" placeholder="Password" required />
+       
+              <ReCAPTCHA
+                sitekey="6LdeY2oqAAAAAGSi81scus4rs5Rz8WM8yeWcdfrZ"
+                ref={recaptchaRef}
+                onChange={handleCaptchaChange}
+              />
+              
+              <Link to="/forgot-password" className="forgot-password">Forgotten Password?</Link>
+              <button type="submit" className="sign-in-btn" disabled={!isCaptchaVerified}>Sign in</button>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </GoogleOAuthProvider>
   );
 };
 

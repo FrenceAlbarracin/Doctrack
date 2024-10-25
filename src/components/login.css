@@ -108,7 +108,7 @@ body {
 }
 
 /* Styling for the Google sign-in button */
-.google-btn {
+.google-login-btn {
     display: flex;
     align-items: center;
     justify-content: left;
@@ -120,21 +120,17 @@ body {
     cursor: pointer;
     width: 45%;
     margin-bottom: 15px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.google-btn img.google-icon {
+.google-login-btn img {
     width: 20px;
     margin-right: 8px;
 }
 
-/* Add hover effect for the Google sign-in button */
-.google-btn {
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition */
-}
-
-.google-btn:hover {
-  background-color: #f0f0f0; /* Change background on hover */
-  transform: scale(1.05); /* Slightly enlarge the button */
+.google-login-btn:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.05);
 }
 
 /* Styling for the sign-in button */
