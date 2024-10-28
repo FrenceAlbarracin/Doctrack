@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styles from './TransactionHistory.module.css';
 
 const transactions = [
@@ -87,19 +87,31 @@ const documentHistories = {
   // Add more document histories as needed
 };
 
-export function TransactionHistory() {
+export function TransactionHistory({ documentType }) {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [documentHistory, setDocumentHistory] = useState(null);
 
+  // Filter transactions based on documentType
+  const filteredTransactions = useMemo(() => {
+    if (!documentType || documentType.toLowerCase() === 'all') {
+      return transactions;
+    }
+    return transactions.filter(transaction => 
+      transaction.status.toLowerCase() === documentType.toLowerCase()
+    );
+  }, [documentType]);
+
   const handleSerialNumberClick = (id) => {
-    setSelectedDocument(id); // Set the selected document ID
-    setDocumentHistory(documentHistories[id]); // Set the history for the selected document
+    setSelectedDocument(id);
+    setDocumentHistory(documentHistories[id]);
   };
 
   return (
     <section className={styles.historySection}>
       <header className={styles.historyHeader}>
-        <h1 className={styles.historyTitle}>History</h1>
+        <h1 className={styles.historyTitle}>
+          {documentType ? `${documentType} Documents` : 'All Documents'}
+        </h1>
         <div className={styles.controls}>
           <div className={styles.searchWrapper}>
             <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/f2a2d5994f3e7591026d17b75e05a400996b2106b14f2cd9dad3595ff535358b?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a" alt="" className={styles.searchIcon} />
@@ -127,7 +139,7 @@ export function TransactionHistory() {
           </tr>
         </thead>
         <tbody>
-          {transactions.map(transaction => (
+          {filteredTransactions.map(transaction => (
             <tr key={transaction.id}>
               <td>
                 <button 

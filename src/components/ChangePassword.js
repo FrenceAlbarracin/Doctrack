@@ -33,7 +33,7 @@ const ChangePassword = () => {
             <h2 style={{ color: 'skyblue' }}>Welcome to <span style={{ color: '#448EE4', fontWeight: 'bold' }}>DocuTrack</span></h2>
           </div>
           <h1>Change Password</h1>
-          <p>Please enter your new password below.</p>
+          <p style={{ marginBottom: '85px' }}>Please enter your new password below.</p>
           <br/>
           {error && <p style={{ color: 'red' }}>{error}</p>}
           <form onSubmit={handleSubmit}>

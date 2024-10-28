@@ -1,0 +1,90 @@
+.profileContainer {
+  background-color: #3498db;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.avatarContainer {
+  position: relative;
+  margin-right: 20px;
+}
+
+.profileAvatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid white;
+}
+
+.cameraIcon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: white;
+  border-radius: 50%;
+  padding: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.profileTitle {
+  font-size: 28px;
+  margin: 0;
+  color: black;
+}
+
+.profileContent {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.profileForm {
+  flex: 1;
+  margin-right: 40px;
+  max-width: 50%;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  cursor: default;
+}
+
+.profileLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+}
+
+.profileLogo img {
+  max-width: 100%;
+  max-height: 300px;
+}

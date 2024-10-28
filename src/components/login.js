@@ -24,18 +24,21 @@ const GoogleLoginButton = ({ isCaptchaVerified }) => {
         
         console.log("User Info:", userInfo.data);
 
-        // Here, you would typically:
-        // 1. Send this data to your backend
-        // 2. Create or update the user in your database
-        // 3. Get a session token or JWT from your backend
-        // 4. Store that token in localStorage or a secure cookie
+        // Send user data to your backend
+        const response = await axios.post('http://localhost:5000/api/login/google', userInfo.data);
+        console.log("Backend response:", response.data);
 
-        // For example:
-        // const response = await axios.post('your-backend-url/auth/google', userInfo.data);
-        // localStorage.setItem('token', response.data.token);
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(response.data.user));
 
-        // After successful authentication and storing the token
-        console.log("Authentication successful, navigating to dashboard...");
+        // Show appropriate message based on whether account was created or just logged in
+        if (response.status === 201) {
+          console.log("New account created and logged in");
+        } else {
+          console.log("Existing account logged in");
+        }
+
+        // Navigate to dashboard
         navigate('/dashboard');
       } catch (error) {
         console.error("Error during Google authentication:", error);
@@ -44,7 +47,7 @@ const GoogleLoginButton = ({ isCaptchaVerified }) => {
     },
     onError: (error) => {
       console.error('Google Sign-In Failed:', error);
-      alert("Login failed. Please try again and ensure you complete the sign-in process.");
+      alert("Sign in failed. Please try again and ensure you complete the sign-in process.");
     },
   });
 
@@ -68,21 +71,49 @@ const Login = () => {
   const navigate = useNavigate();
   const recaptchaRef = useRef();
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleCaptchaChange = (value) => {
     setIsCaptchaVerified(!!value);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!isCaptchaVerified) {
       alert("Please complete the reCAPTCHA");
       return;
     }
     
-    console.log("Form submitted with reCAPTCHA verified");
-    // Add your regular login API call here
-    navigate('/dashboard');
+    setError('');
+    
+    const loginData = {
+      email: username.trim(), // Change this to email
+      password: password
+    };
+    console.log('Sending login data:', loginData);
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/login', loginData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      console.log('Server response:', response.data);
+
+      if (response.data.user) {
+        console.log("Login successful");
+        navigate('/dashboard');
+      } else {
+        setError('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      setError(error.response?.data?.error || 'An error occurred during login');
+    }
   };
 
   return (
@@ -102,12 +133,25 @@ const Login = () => {
             
             <GoogleLoginButton isCaptchaVerified={isCaptchaVerified} />
             
+            {error && <p style={{ color: 'red' }}>{error}</p>}
             <form onSubmit={handleSubmit}>
               <label>Enter your username or email address</label>
-              <input type="text" placeholder="Username or email address" required />
+              <input 
+                type="text" 
+                placeholder="Username or email address" 
+                required 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
               <br />
               <label>Enter your Password</label>
-              <input type="password" placeholder="Password" required />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
        
               <ReCAPTCHA
                 sitekey="6LdeY2oqAAAAAGSi81scus4rs5Rz8WM8yeWcdfrZ"
