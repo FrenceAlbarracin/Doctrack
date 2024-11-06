@@ -14,11 +14,17 @@ const userSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         lowercase: true,
-        match: [/^\d{10}@student\.buksu\.edu\.ph$/, 'Please enter a valid BukSU student number email (e.g., 2001xxxxx@student.buksu.edu.ph)']
+        match: [/@student\.buksu\.edu\.ph$/, 'Please use a valid BukSU student email']
     },
     password: {
         type: String,
         required: true,
+        minlength: [6, 'Password must be at least 6 characters long']
+    },
+    contactNumber: {
+        type: String,
+        required: true,
+        match: [/^[0-9]{11}$/, 'Please enter a valid 11-digit contact number']
     },
     profilePicture: {
         type: String,
@@ -26,8 +32,8 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['officer', 'admin'],
-        default: 'officer'
+        enum: ['student', 'officer', 'admin'],
+        default: 'student'
     },
     status: {
         type: String,
@@ -36,19 +42,25 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-// Hash the password
+// Hash password before saving
 userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        return next();
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
     }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
 });
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+    try {
+        return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+        throw error;
+    }
 };
 
 // Create the User model

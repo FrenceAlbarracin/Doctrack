@@ -1,43 +1,69 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/UserLoginModel'); // Adjust path to your User model
-const bcrypt = require('bcryptjs');
+const User = require('../models/UserLoginModel');
 
-// User registration route
 router.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
-
     try {
-        // Check if the user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+        const { username, email, password, contactNumber } = req.body;
+
+        // Validate email format
+        if (!email.endsWith('@student.buksu.edu.ph')) {
+            return res.status(400).json({
+                error: 'Please use a valid BukSU student email address'
+            });
         }
 
-        // Create the user
+        // Validate contact number
+        if (!/^[0-9]{11}$/.test(contactNumber)) {
+            return res.status(400).json({
+                error: 'Please enter a valid 11-digit contact number'
+            });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({
+            $or: [{ email }, { username }]
+        });
+
+        if (existingUser) {
+            return res.status(400).json({
+                error: existingUser.email === email 
+                    ? 'Email already registered' 
+                    : 'Username already taken'
+            });
+        }
+
+        // Create new user
         const user = new User({
             username,
             email,
-            password, // Password will be hashed in the pre-save hook
+            password,
+            contactNumber,
+            role: 'student',
+            status: 'pending'
         });
 
         await user.save();
 
         res.status(201).json({
-            message: 'User registered successfully',
-            user: { username, email, role: user.role, status: user.status } // Send user info except password
+            success: true,
+            message: 'Registration successful! Please wait for admin approval.',
+            user: {
+                username,
+                email,
+                contactNumber,
+                role: user.role,
+                status: user.status
+            }
         });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Registration error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Registration failed'
+        });
     }
 });
 
-router.get('/all', async (req, res) => {
-    try {
-        const user = await User.find({});
-        res.json(user);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 module.exports = router;

@@ -9,46 +9,24 @@ const {
     validateDocumentCreation 
 } = require('../middlewares/documentMiddleware');
 
-// Routes using controller methods and middleware
-router.post('/', [isAdmin, validateDocumentCreation], documentController.createDocument);
-router.get('/', isOfficer, documentController.getAllDocuments);
-router.get('/:id', [isOfficer, validateDocument], documentController.getDocument);
-router.put('/:id/transfer', [
-    isOfficer, 
-    validateDocument, 
-    validateTransfer
-], documentController.transferDocument);
-router.delete('/:id', [isAdmin, validateDocument], documentController.deleteDocument);
-
+// Place the /documents/all route BEFORE any parameterized routes
 router.get('/documents/all', async (req, res) => {
     try {
-        const document = await AllDocument.find({});
-        res.json(document);
+        console.log('Attempting to fetch documents...');
+        const documents = await AllDocument.find({}).lean();
+        console.log('Documents found:', documents);
+        res.json(documents);
     } catch (error) {
+        console.error('Error fetching documents:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-router.get('/history/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Fetch the document with its history
-    const document = await AllDocument.findById(id);
-    
-    if (!document) {
-      return res.status(404).json({ message: 'Document not found' });
-    }
-
-    // If you store history in the document model, return it
-    // You might need to adjust this based on your actual data structure
-    const history = document.history || [];
-    
-    res.json(history);
-  } catch (error) {
-    console.error('Error fetching document history:', error);
-    res.status(500).json({ message: 'Error fetching document history' });
-  }
-});
+// Then place all other routes
+router.post('/', [isAdmin, validateDocumentCreation], documentController.createDocument);
+router.get('/', isOfficer, documentController.getAllDocuments);
+router.get('/:id', [isOfficer, validateDocument], documentController.getDocument);
+router.put('/:id/transfer', [isOfficer, validateDocument, validateTransfer], documentController.transferDocument);
+router.delete('/:id', [isAdmin, validateDocument], documentController.deleteDocument);
 
 module.exports = router;

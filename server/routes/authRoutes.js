@@ -1,46 +1,71 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
-const { verifyToken } = require('../middlewares/authMiddleware');
-const apiIntegrationController = require("../controllers/apiIntegration");
-const authMiddleware = require("../middlewares/authMiddleware");
-const validationMiddleware = require("../middlewares/validationMiddleware");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/UserLoginModel');
 
-// Register a new user
-router.post('/register', authController.registerUser);
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        console.log('Login attempt for:', email);
 
-// User login, returns a JWT for session management
-router.post('/login', authController.loginUser);
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
 
-// Verifies a 2FA code (OTP) 
-router.post('/verify-2fa', authController.verify2FA);
+        const user = await User.findOne({ 
+            $or: [
+                { email: email.toLowerCase() },
+                { username: email }
+            ]
+        });
 
-// Refreshes the JWT when it’s about to expire
-router.post('/refresh', authController.refreshToken);
+        console.log('User found:', user ? 'Yes' : 'No');
 
-// Logs the user out
-router.post('/logout', verifyToken, authController.logoutUser);
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
-// Retrieves the current user detail and role
-router.get('/user', verifyToken, authController.getUserDetails);
+        const isValidPassword = await user.comparePassword(password);
+        console.log('Password valid:', isValidPassword);
 
-router.post(
-    "/calendar",
-    authMiddleware.authenticate,          
-    validationMiddleware.validateReminderData,  
-    apiIntegrationController.scheduleReminder   
-  );
-  
-router.get(
-    "/tasks",
-    authMiddleware.authenticate,             
-    apiIntegrationController.getTasks          
-  );
-  
-router.post(
-    "/verify-captcha",
-    validationMiddleware.validateCaptchaData,  
-    apiIntegrationController.verifyCaptcha      
-  );
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        if (user.role === 'officer' && user.status === 'pending') {
+            return res.status(403).json({ 
+                error: 'Your account is pending. Please contact the admin to approve your account.'
+            });
+        }
+
+        const token = jwt.sign(
+            { 
+                id: user._id, 
+                role: user.role,
+                status: user.status 
+            },
+            process.env.JWT_SECRET || 'your-secret-key',
+            { expiresIn: '1h' }
+        );
+
+        return res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                email: user.email,
+                username: user.username,
+                role: user.role,
+                status: user.status
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 module.exports = router;

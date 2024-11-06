@@ -1,16 +1,80 @@
-import React from 'react';
-import './signin.css'; // Reuse the CSS file for styling
+import React, { useState } from 'react';
+import './signin.css';
 import logo from '../assets/logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    username: '',
+    contactNumber: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (event) => {
-    event.preventDefault(); // Prevent the default form submission
-    // Add your form submission logic here
-    console.log("Form submitted");
-    navigate('/'); // Redirect to the login page
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      // Validate email format
+      if (!formData.email.endsWith('@student.buksu.edu.ph')) {
+        setError('Please use a valid BukSU student email address');
+        return;
+      }
+
+      // Validate contact number
+      if (!/^[0-9]{11}$/.test(formData.contactNumber)) {
+        setError('Please enter a valid 11-digit contact number');
+        return;
+      }
+
+      // Validate password length
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return;
+      }
+
+      const response = await fetch('http://localhost:2000/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          username: formData.username,
+          password: formData.password,
+          contactNumber: formData.contactNumber,
+          role: 'student', // Add default role
+          status: 'pending' // Add default status
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Registration successful
+      alert('Registration successful! Please wait for admin approval.');
+      navigate('/'); // Redirect to login page
+    } catch (error) {
+      setError(error.message || 'Registration failed');
+      console.error('Registration error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -26,25 +90,67 @@ const Signup = () => {
             <p style={{ fontSize: '14px' }}><br />Have account?<br /> <Link to="/" className="signup-link">Sign In</Link></p>
           </div>
           <h1>Sign Up</h1>
+          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
           <form onSubmit={handleSubmit}>
             <label htmlFor="email">Enter your university Email Address</label>
-            <input id="email" type="email" placeholder="University Email" required />
+            <input 
+              id="email" 
+              type="email" 
+              placeholder="University Email" 
+              required 
+              value={formData.email}
+              onChange={handleChange}
+              pattern=".+@student\.buksu\.edu\.ph"
+              title="Please use your BukSU student email"
+            />
             <br />
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
               <div style={{ width: '48%' }}>
-                <label htmlFor="name">User Name</label>
-                <input id="name" type="text" placeholder="User Name" required style={{ width: '100%' }} />
+                <label htmlFor="username">User Name</label>
+                <input 
+                  id="username" 
+                  type="text" 
+                  placeholder="User Name" 
+                  required 
+                  value={formData.username}
+                  onChange={handleChange}
+                  style={{ width: '100%' }} 
+                />
               </div>
               <div style={{ width: '40%' }}>
-                <label htmlFor="number">Contact Number</label>
-                <input id="number" type="tel" placeholder="09XX-XXX-XXXX" required style={{ width: '100%' }} />
+                <label htmlFor="contactNumber">Contact Number</label>
+                <input 
+                  id="contactNumber" 
+                  type="tel" 
+                  placeholder="09XX-XXX-XXXX" 
+                  required 
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                  pattern="[0-9]{11}"
+                  title="Please enter a valid phone number"
+                  style={{ width: '100%' }} 
+                />
               </div>
             </div>
             <br />
             <label htmlFor="password">Enter your Password</label>
-            <input id="password" type="password" placeholder="Password" required />
+            <input 
+              id="password" 
+              type="password" 
+              placeholder="Password" 
+              required 
+              value={formData.password}
+              onChange={handleChange}
+              minLength="6"
+            />
             <br/>
-            <button type="submit" className="sign-in-btn">Sign up</button>
+            <button 
+              type="submit" 
+              className="sign-in-btn" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing up...' : 'Sign up'}
+            </button>
           </form>
         </div>
       </div>

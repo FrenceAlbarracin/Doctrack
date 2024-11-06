@@ -1,44 +1,97 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
-import './login.css'; // Import the CSS file for styling
+import { useNavigate } from 'react-router-dom';
+import './login.css';
 import logo from '../assets/logo.png';
-import googleLogo from '../assets/google.webp'; // Import the Google logo
 import { Link } from 'react-router-dom';
-import { GoogleLogin } from 'react-google-login'; // Import GoogleLogin
-import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import ReCAPTCHA from 'react-google-recaptcha';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
-  const navigate = useNavigate(); // Initialize useNavigate
-  const recaptchaRef = React.useRef(); // Create a ref for the reCAPTCHA
-  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false); // State to track reCAPTCHA verification
+  const navigate = useNavigate();
+  const recaptchaRef = React.useRef();
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
 
-  const responseGoogle = (response) => {
-    console.log("Google response:", response); // Log the response from Google
-    if (response.profileObj) {
-      // Only navigate if the response is valid
-      recaptchaRef.current.reset(); // Reset the reCAPTCHA
-      setIsCaptchaVerified(false); // Reset the captcha verification state
-      navigate('/dashboard'); // Redirect to the dashboard
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleGoogleSuccess = (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log("Decoded Google User:", decoded);
+      
+      recaptchaRef.current.reset();
+      setIsCaptchaVerified(false);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Google login error:", error);
     }
   };
 
   const handleCaptchaChange = (value) => {
-    setIsCaptchaVerified(!!value); // Set state to true when reCAPTCHA is verified
+    setIsCaptchaVerified(!!value);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const recaptchaValue = recaptchaRef.current.getValue(); // Get the reCAPTCHA value
-    if (!recaptchaValue) {
-      alert("Please complete the reCAPTCHA"); // Alert if reCAPTCHA is not completed
-      return;
-    }
     
-    console.log("Form submitted with reCAPTCHA value:", recaptchaValue);
-    recaptchaRef.current.reset(); // Reset the reCAPTCHA
-    setIsCaptchaVerified(false); // Reset the captcha verification state
-    // Add your login API call here
-    navigate('/dashboard'); // Redirect to the dashboard
+    if (!recaptchaRef.current.getValue()) {
+        setError("Please complete the reCAPTCHA");
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:2000/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: formData.email.toLowerCase(),
+                password: formData.password
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Login failed');
+        }
+
+        // Check user role and status
+        if (data.user.role === 'officer' && data.user.status === 'pending') {
+            throw new Error('Your account is still pending approval');
+        }
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Reset reCAPTCHA
+        recaptchaRef.current.reset();
+        setIsCaptchaVerified(false);
+
+        // Route based on role and status
+        if (data.user.role === 'admin') {
+            navigate('/dashboard');
+        } else if (data.user.role === 'officer' && data.user.status === 'active') {
+            navigate('/dashboard');
+        }
+
+    } catch (error) {
+        setError(error.message);
+        console.error('Login error:', error);
+        recaptchaRef.current.reset();
+        setIsCaptchaVerified(false);
+    } 
   };
 
   return (
@@ -55,40 +108,58 @@ const Login = () => {
           </div>
           <h1>Sign in</h1>
           
-          {/* Google Login Button */}
-          <GoogleLogin
-            clientId="948616457649-9m9i5mjm96aq76cgbk96t1rk0guo137k.apps.googleusercontent.com" // Replace with your client ID
-            buttonText="Sign in with Google"
-            onSuccess={responseGoogle} // Handle success
-            onFailure={responseGoogle} // Handle failure
-            cookiePolicy={'single_host_origin'}
-            render={renderProps => (
-              <button 
-                className="google-btn" 
-                onClick={isCaptchaVerified ? renderProps.onClick : null} // Disable if captcha not verified
-                disabled={!isCaptchaVerified} // Disable button if captcha not verified
-              >
-                <img src={googleLogo} alt="Google Icon" className="google-icon" />
-                Sign in with Google
-              </button>
-            )}
-          />
+          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+
+          <GoogleOAuthProvider clientId="948616457649-9m9i5mjm96aq76cgbk96t1rk0guo137k.apps.googleusercontent.com">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                console.log('Login Failed');
+              }}
+              useOneTap
+              theme="filled_blue"
+              text="signin_with"
+              shape="rectangular"
+              size="large"
+              logo_alignment="left"
+            />
+          </GoogleOAuthProvider>
       
-          <form onSubmit={handleSubmit}> {/* Update form to handle submit */}
+          <form onSubmit={handleSubmit}>
             <label>Enter your username or email address</label>
-            <input type="text" placeholder="Username or email address" required />
+            <input 
+              type="text" 
+              name="email"
+              placeholder="Username or email address" 
+              required 
+              value={formData.email}
+              onChange={handleInputChange}
+            />
             <br />
             <label>Enter your Password</label>
-            <input type="password" placeholder="Password" required />
+            <input 
+              type="password" 
+              name="password"
+              placeholder="Password" 
+              required 
+              value={formData.password}
+              onChange={handleInputChange}
+            />
        
             <ReCAPTCHA
-              sitekey="6LdeY2oqAAAAAGSi81scus4rs5Rz8WM8yeWcdfrZ" // Replace with your reCAPTCHA site key
-              ref={recaptchaRef} // Attach the ref
-              onChange={handleCaptchaChange} // Handle reCAPTCHA change
+              sitekey="6LdeY2oqAAAAAGSi81scus4rs5Rz8WM8yeWcdfrZ"
+              ref={recaptchaRef}
+              onChange={handleCaptchaChange}
             />
             
             <Link to="/forgot-password" className="forgot-password">Forgotten Password?</Link>
-            <button type="submit" className="sign-in-btn">Sign in</button>
+            <button 
+              type="submit" 
+              className="sign-in-btn"
+              disabled={!isCaptchaVerified}
+            >
+              Sign in
+            </button>
           </form>
         </div>
       </div>
