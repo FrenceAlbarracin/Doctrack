@@ -33,6 +33,18 @@ export function Header() {
   const toggleCalendar = () => {
     setShowCalendar(!showCalendar);
   };
+  const handleClickOutside = (e) => {
+    if (!e.target.closest(`.${styles.calendarContainer}`) && 
+        !e.target.closest(`.${styles.calendarIcon}`)) {
+      setShowCalendar(false);
+    }
+  };
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleAuthClick = async () => {
     try {
