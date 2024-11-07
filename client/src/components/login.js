@@ -29,11 +29,16 @@ const Login = () => {
       const decoded = jwtDecode(credentialResponse.credential);
       console.log("Decoded Google User:", decoded);
       
+      if (!decoded.email.endsWith('@student.buksu.edu.ph')) {
+        alert('Access is restricted to @student.buksu.edu.ph email addresses only.');
+        return; 
+      }
       recaptchaRef.current.reset();
       setIsCaptchaVerified(false);
       navigate('/dashboard');
     } catch (error) {
       console.error("Google login error:", error);
+      setError('Login failed. Please try again.');
     }
   };
 

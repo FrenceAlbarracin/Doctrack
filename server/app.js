@@ -12,7 +12,11 @@ require('dotenv').config();
 const app = express();
 
 app.use(express.json()); 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  credentials: true 
+}));
 
 // Routes
 app.use('/auth', authRoutes); 
@@ -28,7 +32,7 @@ console.log(process.env.MONGODB_URI);
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Optional: How long to wait for a server to be available
+  serverSelectionTimeoutMS: 50000, // Optional: How long to wait for a server to be available
   socketTimeoutMS: 45000, // Optional: Close sockets after 45 seconds
 }).then(() => {
   console.log('Connected to MongoDB');

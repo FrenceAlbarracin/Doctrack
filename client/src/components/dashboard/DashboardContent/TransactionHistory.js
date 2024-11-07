@@ -19,23 +19,19 @@ export function TransactionHistory() {
     }
   };
 
-  const [documentData, setDocumentData] = useState([]);
+  const [documentData, setDocumentData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDocument = async () => {
-      setLoading(true);
       try {
-        const response = await fetch('http://localhost:2000/api/documents/documents/all');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await fetch('http://localhost:2000/documents/documents/all');
         const data = await response.json();
-        console.log('Fetched documents:', data);
+        console.log(data);
+        
         setDocumentData(data);
       } catch (error) {
         console.error('Error fetching documents:', error);
-        // Optionally set an error state here to show to the user
       } finally {
         setLoading(false);
       }
@@ -59,27 +55,20 @@ export function TransactionHistory() {
   };
 
   const getSortedData = (data) => {
-    if (!data || !Array.isArray(data)) {
-      return {
-        data: [],
-        totalPages: 0
-      };
-    }
+    if (!data) return [];
     
     let filteredData = data.filter(item => 
-      (item.documentName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (item.recipient?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (item.serialNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      item.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
     switch (sortOption) {
       case 'newest':
-        filteredData.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        filteredData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
       case 'oldest':
-        filteredData.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-        break;
-      default:
+        filteredData.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         break;
     }
 
@@ -152,37 +141,27 @@ export function TransactionHistory() {
           </tr>
         </thead>
         <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="6" style={{textAlign: 'center'}}>Loading...</td>
+          {getSortedData(documentData).data.map(transaction => (
+            <tr key={transaction._id}>
+              <td>
+                <button 
+                  className={styles.serialNumber} 
+                  onClick={() => handleSerialNumberClick(transaction._id)}
+                >
+                  {transaction.serialNumber}
+                </button>
+              </td>
+              <td>{transaction.documentName}</td>
+              <td>{transaction.recipient}</td>
+              <td>{formatDate(transaction.createdAt)}</td>
+              <td>{formatDate(transaction.modified)}</td>
+              <td>
+                <span className={`${styles.status} ${styles[transaction.status.toLowerCase().replace(" ", "")]}`}>
+                  {transaction.status}
+                </span>
+              </td>
             </tr>
-          ) : documentData.length === 0 ? (
-            <tr>
-              <td colSpan="6" style={{textAlign: 'center'}}>No documents found</td>
-            </tr>
-          ) : (
-            getSortedData(documentData).data.map(transaction => (
-              <tr key={transaction._id}>
-                <td>
-                  <button 
-                    className={styles.serialNumber} 
-                    onClick={() => handleSerialNumberClick(transaction._id)}
-                  >
-                    {transaction.serialNumber}
-                  </button>
-                </td>
-                <td>{transaction.documentName}</td>
-                <td>{transaction.recipient}</td>
-                <td>{formatDate(transaction.createdAt)}</td>
-                <td>{formatDate(transaction.modified)}</td>
-                <td>
-                  <span className={`${styles.status} ${styles[transaction.status.toLowerCase().replace(" ", "")]}`}>
-                    {transaction.status}
-                  </span>
-                </td>
-              </tr>
-            ))
-          )}
+          ))}
         </tbody>
       </table>
       {/* Popup for document history */}
