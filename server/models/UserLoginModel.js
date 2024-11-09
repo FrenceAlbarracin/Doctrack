@@ -28,11 +28,6 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: [6, 'Password must be at least 6 characters long']
     },
-    contactNumber: {
-        type: String,
-        required: true,
-        match: [/^[0-9]{11}$/, 'Please enter a valid 11-digit contact number']
-    },
     organization: {
         type: String,
         required: function() {

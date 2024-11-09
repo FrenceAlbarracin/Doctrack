@@ -8,7 +8,6 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     email: '',
     username: '',
-    contactNumber: '',
     password: '',
     organization: ''
   });
@@ -34,12 +33,6 @@ const Signup = () => {
         return;
       }
 
-      // Validate contact number
-      if (!/^[0-9]{11}$/.test(formData.contactNumber)) {
-        setError('Please enter a valid 11-digit contact number');
-        return;
-      }
-
       // Validate password length
       if (formData.password.length < 6) {
         setError('Password must be at least 6 characters long');
@@ -55,7 +48,6 @@ const Signup = () => {
           email: formData.email,
           username: formData.username,
           password: formData.password,
-          contactNumber: formData.contactNumber,
           organization: formData.organization,
           role: 'student', // Add default role
           status: 'pending' // Add default status
@@ -122,20 +114,6 @@ const Signup = () => {
                   required 
                   value={formData.username}
                   onChange={handleChange}
-                  style={{ width: '100%' }} 
-                />
-              </div>
-              <div style={{ width: '40%' }}>
-                <label htmlFor="contactNumber">Contact Number</label>
-                <input 
-                  id="contactNumber" 
-                  type="tel" 
-                  placeholder="09XX-XXX-XXXX" 
-                  required 
-                  value={formData.contactNumber}
-                  onChange={handleChange}
-                  pattern="[0-9]{11}"
-                  title="Please enter a valid phone number"
                   style={{ width: '100%' }} 
                 />
               </div>

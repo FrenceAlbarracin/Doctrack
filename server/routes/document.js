@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const AllDocument = require('../models/AllDocument');
+const AllDocument = require('../models/Document');
 
 // Debug route
 router.get('/debug', async (req, res) => {
@@ -23,6 +23,7 @@ router.get('/documents/all', async (req, res) => {
         console.log('Fetching all documents...');
         const documents = await AllDocument.find({}).sort({ createdAt: -1 });
         console.log(`Found ${documents.length} documents`);
+        console.log(documents)
         res.json(documents);
     } catch (error) {
         console.error('Error in /documents/all:', error);

@@ -32,10 +32,10 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('MongoDB Connected');
         // Debug log to check for documents
-        const AllDocument = require('./models/AllDocument');
-        AllDocument.find({}).then(docs => {
-            console.log('Available documents:', docs.length);
-        });
+        // const document = require('./models/documents');
+        // AllDocument.find({}).then(docs => {
+        //     console.log('Available documents:', docs.length);
+        // });
     })
     .catch(err => console.error('MongoDB connection error:', err));
 
