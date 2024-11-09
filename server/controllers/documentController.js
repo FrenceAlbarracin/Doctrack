@@ -106,6 +106,76 @@ const getAllDocumentHistory = async ({ dateRange, department, office }) => {
     }
 };
 
+// Add this new function
+exports.getRecipientStats = async (req, res) => {
+    try {
+        const stats = await Document.aggregate([
+            {
+                $group: {
+                    _id: '$recipient',
+                    value: { $sum: 1 },
+                }
+            }
+        ]);
+
+        // Transform the data to include colors
+        const colors = ['#344bfd', '#f4a79d', '#f68d2b', '#4CAF50', '#9C27B0']; // Add more colors if needed
+        const formattedStats = stats.map((stat, index) => ({
+            name: stat._id,
+            value: stat.value,
+            color: colors[index % colors.length]
+        }));
+
+        res.status(200).json(formattedStats);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getDailyStats = async (req, res) => {
+    try {
+        const today = new Date();
+        const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        const stats = await Document.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: lastWeek }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ]);
+
+        // Format data for the last 7 days
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const formattedStats = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            const stat = stats.find(s => s._id === dateStr);
+            
+            formattedStats.push({
+                day: i === 0 ? 'Today' : daysOfWeek[date.getDay()],
+                value: stat ? stat.count : 0
+            });
+        }
+
+        res.json(formattedStats);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     ...module.exports,  // Keep existing exports
     getDocumentHistoryById,

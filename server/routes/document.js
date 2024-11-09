@@ -39,6 +39,10 @@ router.get('/history', documentController.getAllDocumentHistory);
 // Route to get movement history of a specific document by ID
 router.get('/:id/history', validateDocumentId, documentController.getDocumentHistoryById);
 
+// Add this new route
+router.get('/recipient-stats', documentController.getRecipientStats);
 
+// Add this new route
+router.get('/daily-stats', documentController.getDailyStats);
 
 module.exports = router;
