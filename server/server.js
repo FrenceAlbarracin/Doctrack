@@ -1,7 +1,6 @@
 require('dotenv').config();
 // Import routes
 const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
 const documentRoutes = require('./routes/document');
 const newDocumentRoutes = require('./routes/newDocumentRoutes');
 
@@ -18,7 +17,6 @@ app.use(express.json());
 
 // Use routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/documents/new', newDocumentRoutes);
 
