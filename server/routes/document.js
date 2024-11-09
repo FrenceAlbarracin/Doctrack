@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const AllDocument = require('../models/Document');
+const documentController = require('../controllers/documentController');
+const validateDocumentId = require('../middlewares/docuHistoryMiddleware');
 
 // Debug route
 router.get('/debug', async (req, res) => {
@@ -30,5 +32,13 @@ router.get('/documents/all', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Route to get all document transfer history with optional filters
+router.get('/history', documentController.getAllDocumentHistory);
+
+// Route to get movement history of a specific document by ID
+router.get('/:id/history', validateDocumentId, documentController.getDocumentHistoryById);
+
+
 
 module.exports = router;
