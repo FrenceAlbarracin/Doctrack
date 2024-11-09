@@ -4,10 +4,11 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const documentRoutes = require('./routes/document');
 
-const app = express();
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const app = express();
 
 // Middleware
 app.use(cors());
