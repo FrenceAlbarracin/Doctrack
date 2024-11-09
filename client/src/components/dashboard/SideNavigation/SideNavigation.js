@@ -11,7 +11,7 @@ const navigationItems = [
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/005c7a1fc7b800da9ed0eb7da389c028dba409099cc177f99c94e1fb260ee196?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Dashboard", isActive: true, link: "/dashboard" },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/b926edca9da2bd02e758e006f2ebaf4a5943ec2e14c0bc7043ff1638257afb48?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "New Document" },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/62af66e9f4c012032bfebdb68e774d2cca1b439bb2c9f816d6066d03b5c1cafc?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transfer In" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/4eb8849ea926bf25c860065d3e79a63b28b18b1c0af27d925504e2538aa4471b?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transfer Out" },
+  { icon: "/images/icon.png", label: "Pending" },
 ];
 
 const documentItems = [
@@ -24,7 +24,6 @@ const transactionItems = [
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/2b3c073a352329613670f0bd837641b9a273596f92e97a5493d4f54d6fddbf81?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transferred In" },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/83feaa9ecdedbf3d72e64b4b4994f571d0ef35f7cef23d1c2e8aae75d542019c?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transferred Out" },
 ];
-
 
 const SideNavigation = () => {
   const [isModalOpen, setModalOpen] = useState(false);
