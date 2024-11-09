@@ -32,8 +32,8 @@ console.log(process.env.MONGODB_URI);
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 50000, // Optional: How long to wait for a server to be available
-  socketTimeoutMS: 45000, // Optional: Close sockets after 45 seconds
+  serverSelectionTimeoutMS: 5000000, // Optional: How long to wait for a server to be available
+  socketTimeoutMS: 4500000, // Optional: Close sockets after 45 seconds
 }).then(() => {
   console.log('Connected to MongoDB');
 }).catch((error) => {

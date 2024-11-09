@@ -25,10 +25,6 @@ const transactionItems = [
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/83feaa9ecdedbf3d72e64b4b4994f571d0ef35f7cef23d1c2e8aae75d542019c?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transferred Out" },
 ];
 
-const manageItems = [
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/ef14105a500b66854f89c5620f3d32e2a5dbaf09c38aedabb17f4c76b9ab15f4?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "New User Approval" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/fdf6a3c79bdaad8ecf0558b37a861092b45999045f1f0e63787a112b3c20be64?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Manage Users" },
-];
 
 const SideNavigation = () => {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -126,10 +122,6 @@ const SideNavigation = () => {
         <NavigationItem key={`trans-${index}`} {...item} />
       ))}
       
-      <h2 className={styles.sectionTitle}>Manage</h2>
-      {manageItems.map((item, index) => (
-        <NavigationItem key={`manage-${index}`} {...item} />
-      ))}
       
       {/* Modal */}
       <Modal isOpen={isModalOpen} onClose={closeModal} title={modalTitle}>

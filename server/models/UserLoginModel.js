@@ -14,7 +14,14 @@ const userSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         lowercase: true,
-        match: [/@student\.buksu\.edu\.ph$/, 'Please use a valid BukSU student email']
+        validate: {
+            validator: function(email) {
+                // Skip validation for admin emails
+                if (this.role === 'admin') return true;
+                return email.endsWith('@student.buksu.edu.ph');
+            },
+            message: 'Please use a valid BukSU student email'
+        }
     },
     password: {
         type: String,

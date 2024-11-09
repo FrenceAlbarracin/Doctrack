@@ -1,14 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserLoginModel');
+const bcrypt = require('bcryptjs');
 
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        
-        console.log('Login attempt for:', email);
+
+        console.log('Login attempt details:', {
+            email,
+            providedPassword: password,
+        });
 
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required' });
@@ -17,27 +20,26 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ 
             $or: [
                 { email: email.toLowerCase() },
-                { username: email }
+                { username: email.toLowerCase() }
             ]
         });
 
-        console.log('User found:', user ? 'Yes' : 'No');
-
         if (!user) {
+            console.log('User not found:', email);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         const isValidPassword = await user.comparePassword(password);
-        console.log('Password valid:', isValidPassword);
+        
+        console.log('Password comparison details:', {
+            isValid: isValidPassword,
+            email: user.email,
+            role: user.role
+        });
 
         if (!isValidPassword) {
+            console.log('Invalid password for user:', email);
             return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        if (user.role === 'officer' && user.status === 'pending') {
-            return res.status(403).json({ 
-                error: 'Your account is pending. Please contact the admin to approve your account.'
-            });
         }
 
         const token = jwt.sign(

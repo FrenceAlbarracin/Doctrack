@@ -13,6 +13,7 @@ export function Header() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const profileMenuRef = useRef(null);
   const notificationRef = useRef(null);
@@ -28,6 +29,13 @@ export function Header() {
       setIsAuthenticated(true);
     }
     gapi.load('client:auth2', start);
+  }, []);
+
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      setUser(userData);
+    }
   }, []);
 
   const toggleCalendar = () => {
@@ -155,8 +163,8 @@ export function Header() {
         </nav>
         <div className={styles.userInfo}>
           <div className={styles.userDetails}>
-            <span className={styles.userName}>User00001</span>
-            <span className={styles.userEmail}>user00001@servicedeck.io</span>
+            <span className={styles.userName}>{user?.username || 'Guest'}</span>
+            <span className={styles.userEmail}>{user?.email || 'No email'}</span>
           </div>
         </div>
         <div className={styles.profileMenuContainer} ref={profileMenuRef}>

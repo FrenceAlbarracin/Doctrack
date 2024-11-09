@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const User = require('../models/UserLoginModel'); 
 // const otpService = require('../services/otpService'); 
 const { JWT_SECRET, JWT_EXPIRES_IN } = process.env;

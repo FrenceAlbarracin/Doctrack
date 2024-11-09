@@ -86,7 +86,7 @@ const Login = () => {
 
         // Route based on role and status
         if (data.user.role === 'admin') {
-            navigate('/dashboard');
+            navigate('/admin/dashboard');
         } else if (data.user.role === 'officer' && data.user.status === 'active') {
             navigate('/dashboard');
         }
