@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../DashboardLayout.module.css';
 import { Header } from '../Header/Header';
 import AdminSideNavigation from './AdminSideNavigation';
-import { DashboardContent } from '../DashboardContent/DashboardContent';
+import { DashboardContent } from './DashboardContent/DashboardContent';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();

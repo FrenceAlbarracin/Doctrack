@@ -4,7 +4,17 @@ const User = require('../models/UserLoginModel');
 
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password, contactNumber } = req.body;
+        const { username, email, password, contactNumber, organization } = req.body;
+
+        console.log('Organization received:', organization);
+
+        console.log('Received registration data:', {
+            username,
+            email,
+            contactNumber,
+            organization,
+            hasPassword: !!password
+        });
 
         // Validate email format
         if (!email.endsWith('@student.buksu.edu.ph')) {
@@ -17,6 +27,14 @@ router.post('/register', async (req, res) => {
         if (!/^[0-9]{11}$/.test(contactNumber)) {
             return res.status(400).json({
                 error: 'Please enter a valid 11-digit contact number'
+            });
+        }
+
+        // Validate organization
+        const validOrganizations = ['SBO COT', 'SBO EDUC', 'SBO CAS'];
+        if (!organization || !validOrganizations.includes(organization)) {
+            return res.status(400).json({
+                error: 'Please select a valid organization'
             });
         }
 
@@ -33,18 +51,24 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Create new user
+        // Create new user with organization
         const user = new User({
             username,
             email,
             password,
             contactNumber,
+            organization,
             role: 'student',
             status: 'pending'
         });
 
+        console.log('User object before save:', user.toObject());
+
         await user.save();
 
+        console.log('User saved successfully with ID:', user._id);
+
+        // Include organization in the response
         res.status(201).json({
             success: true,
             message: 'Registration successful! Please wait for admin approval.',
@@ -52,6 +76,7 @@ router.post('/register', async (req, res) => {
                 username,
                 email,
                 contactNumber,
+                organization,
                 role: user.role,
                 status: user.status
             }

@@ -25,13 +25,23 @@ export function TransactionHistory() {
   useEffect(() => {
     const fetchDocument = async () => {
       try {
-        const response = await fetch('http://localhost:2000/documents/documents/all');
-        const data = await response.json();
-        console.log(data);
+        console.log('Fetching documents...');
+        const response = await fetch('http://localhost:2000/api/documents/documents/all', {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
         
-        setDocumentData(data);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Documents received:', data);
+        setDocumentData(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error('Error fetching documents:', error);
+        console.error('Fetch error:', error);
+        setDocumentData([]);
       } finally {
         setLoading(false);
       }
@@ -60,18 +70,22 @@ export function TransactionHistory() {
       totalPages: 0
     };
     
-    let filteredData = data.filter(item => 
-      item.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filteredData = searchTerm 
+      ? data.filter(item => 
+          (item.documentName && item.documentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.recipient && item.recipient.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.serialNumber && item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+      : [...data];
     
     switch (sortOption) {
       case 'newest':
-        filteredData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        filteredData.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         break;
       case 'oldest':
-        filteredData.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        filteredData.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        break;
+      default:
         break;
     }
 

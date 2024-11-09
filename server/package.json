@@ -2,9 +2,9 @@
   "name": "20241_t163-cot-document-tracking-for-ssc",
   "version": "1.0.0",
   "description": "BSIT 3C",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "nodemon server.js"
   },
   "repository": {
     "type": "git",

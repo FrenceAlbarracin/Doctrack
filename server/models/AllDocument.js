@@ -7,15 +7,18 @@ const documentSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    serialNumber: {
+        type: String,
+        required: true,
+        unique: true,
+    },
     recipient: {
         type: String,
         required: true,
-        immutable: true,
     },
     dateCreated: {
         type: Date,
-        required: true,
-        timestamps: true
+        default: Date.now,
     },
     lastModified: {
         type: Date,
@@ -23,12 +26,20 @@ const documentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: '',
+        enum: ['pending', 'active', 'inactive', 'inTransit'],
+        default: 'pending',
     },
-   
-}, 
-
-);
+    currentLocation: {
+        type: String,
+        required: true,
+    },
+    originOffice: {
+        type: String,
+        required: true,
+    }
+}, {
+    timestamps: true
+});
 
 // Add this to debug queries
 documentSchema.pre('find', function() {

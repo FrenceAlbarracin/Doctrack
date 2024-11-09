@@ -24,6 +24,7 @@ const createAdmin = async () => {
             email: 'admin@buksu.edu.ph',
             password: 'admin123', // The password will be hashed by the pre-save middleware
             contactNumber: '09123456789',
+            organization: 'SBO COT',
             role: 'admin',
             status: 'active'
         });

@@ -29,12 +29,18 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        if (user.status !== 'active') {
+            console.log('User account not active:', email);
+            return res.status(403).json({ error: 'Account is not active. Please wait for admin approval.' });
+        }
+
         const isValidPassword = await user.comparePassword(password);
         
         console.log('Password comparison details:', {
             isValid: isValidPassword,
             email: user.email,
-            role: user.role
+            role: user.role,
+            status: user.status
         });
 
         if (!isValidPassword) {

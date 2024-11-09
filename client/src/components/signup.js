@@ -9,7 +9,8 @@ const Signup = () => {
     email: '',
     username: '',
     contactNumber: '',
-    password: ''
+    password: '',
+    organization: ''
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +56,7 @@ const Signup = () => {
           username: formData.username,
           password: formData.password,
           contactNumber: formData.contactNumber,
+          organization: formData.organization,
           role: 'student', // Add default role
           status: 'pending' // Add default status
         }),
@@ -76,6 +78,12 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
+
+  const organizations = [
+    'SBO COT',
+    'SBO EDUC',
+    'SBO CAS'
+  ];
 
   return (
     <div className="signup-container">
@@ -132,6 +140,27 @@ const Signup = () => {
                 />
               </div>
             </div>
+            <br />
+            <label htmlFor="organization">Select your Organization</label>
+            <select
+              id="organization"
+              value={formData.organization}
+              onChange={handleChange}
+              required
+              style={{
+                width: '105%',
+                padding: '10px',
+                marginBottom: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '15px',
+                fontSize: '16px'
+              }}
+            >
+              <option value="">Select Organization</option>
+              {organizations.map((org, index) => (
+                <option key={index} value={org}>{org}</option>
+              ))}
+            </select>
             <br />
             <label htmlFor="password">Enter your Password</label>
             <input 

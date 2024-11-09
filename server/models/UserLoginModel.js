@@ -33,6 +33,14 @@ const userSchema = new mongoose.Schema({
         required: true,
         match: [/^[0-9]{11}$/, 'Please enter a valid 11-digit contact number']
     },
+    organization: {
+        type: String,
+        required: function() {
+            return this.role !== 'admin';
+        },
+        enum: ['SBO COT', 'SBO EDUC', 'SBO CAS'],
+        default: 'SBO'
+    },
     profilePicture: {
         type: String,
         default: 'default-profile.png'
@@ -40,7 +48,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ['student', 'officer', 'admin'],
-        default: 'student'
+        default: 'officer'
     },
     status: {
         type: String,
