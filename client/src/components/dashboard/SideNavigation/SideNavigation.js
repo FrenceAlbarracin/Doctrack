@@ -18,10 +18,6 @@ const documentItems = [
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/5eb33c88da331cbd7c80d172ba8a5de6d7debd99be7fac7149b15af2863f8670?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "All" },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/299f0b10ae60643f7737cf49c147dcc13c34aad7e5b16295767fbcbfae42acd2?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "In Transit" },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/c23e99a6561a8d6f026efdd6ce16ade880ca84befe6ed8629ae672d7b96ade03?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Finished" },
-];
-
-const transactionItems = [
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/2b3c073a352329613670f0bd837641b9a273596f92e97a5493d4f54d6fddbf81?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transferred In" },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/83feaa9ecdedbf3d72e64b4b4994f571d0ef35f7cef23d1c2e8aae75d542019c?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transferred Out" },
 ];
 
@@ -114,11 +110,6 @@ const SideNavigation = () => {
       <h2 className={styles.sectionTitle}>My Documents</h2>
       {documentItems.map((item, index) => (
         <NavigationItem key={`doc-${index}`} {...item} />
-      ))}
-      
-      <h2 className={styles.sectionTitle}>My Transaction</h2>
-      {transactionItems.map((item, index) => (
-        <NavigationItem key={`trans-${index}`} {...item} />
       ))}
       
       
