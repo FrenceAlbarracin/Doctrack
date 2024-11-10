@@ -39,7 +39,7 @@ const Signup = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:2000/api/users/register', {
+      const response = await fetch('http://localhost:2000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ const Signup = () => {
           username: formData.username,
           password: formData.password,
           organization: formData.organization,
-          role: 'student', // Add default role
+          role: 'officer', // Add default role
           status: 'pending' // Add default status
         }),
       });

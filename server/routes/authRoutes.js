@@ -6,14 +6,13 @@ const jwt = require('jsonwebtoken');
 
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password, contactNumber, organization } = req.body;
+        const { username, email, password, organization } = req.body;
 
         console.log('Organization received:', organization);
 
         console.log('Received registration data:', {
             username,
             email,
-            contactNumber,
             organization,
             hasPassword: !!password
         });
@@ -22,13 +21,6 @@ router.post('/register', async (req, res) => {
         if (!email.endsWith('@student.buksu.edu.ph')) {
             return res.status(400).json({
                 error: 'Please use a valid BukSU student email address'
-            });
-        }
-
-        // Validate contact number
-        if (!/^[0-9]{11}$/.test(contactNumber)) {
-            return res.status(400).json({
-                error: 'Please enter a valid 11-digit contact number'
             });
         }
 
@@ -58,9 +50,8 @@ router.post('/register', async (req, res) => {
             username,
             email,
             password,
-            contactNumber,
             organization,
-            role: 'student',
+            role: 'officer',
             status: 'pending'
         });
 
@@ -77,7 +68,6 @@ router.post('/register', async (req, res) => {
             user: {
                 username,
                 email,
-                contactNumber,
                 organization,
                 role: user.role,
                 status: user.status
