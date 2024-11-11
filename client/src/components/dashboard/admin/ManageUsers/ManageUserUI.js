@@ -6,7 +6,7 @@ export function ManageUserUI({ users }) {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 2; 
+  const itemsPerPage = 10; 
 
   useEffect(() => {
     if (users.length > 0) {
