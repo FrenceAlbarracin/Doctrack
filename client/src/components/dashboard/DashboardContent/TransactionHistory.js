@@ -7,6 +7,29 @@ export function TransactionHistory() {
   const [sortOption, setSortOption] = useState('newest');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [userOrganization, setUserOrganization] = useState(null);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:2000/api/auth/user-details', {
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch user details');
+        const userData = await response.json();
+        setUserOrganization(userData.organization);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
   const handleSerialNumberClick = async (id) => {
     try {
       const response = await fetch(`http://localhost:2000/documents/history/${id}`);
@@ -61,6 +84,10 @@ export function TransactionHistory() {
     };
     
     let filteredData = data.filter(item => 
+      userOrganization === 'admin' ? true : item.recipient === userOrganization
+    );
+    
+    filteredData = filteredData.filter(item => 
       item.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())

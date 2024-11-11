@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/UserLoginModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const authController = require('../controllers/authController');
 
 router.post('/register', async (req, res) => {
     try {
@@ -153,6 +154,35 @@ router.post('/login', async (req, res) => {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// Add middleware to extract user from token
+const extractUser = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Update the user-details route
+router.get('/user-details', extractUser, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching user details' });
+  }
 });
 
 module.exports = router;
