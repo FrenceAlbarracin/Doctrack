@@ -25,7 +25,7 @@ const Management = [
   },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/fdf6a3c79bdaad8ecf0558b37a861092b45999045f1f0e63787a112b3c20be64?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", 
     label: "Manage Organizations", 
-    link: "/admin/manage-organizations" 
+    link: "/admin/manage-organizations"
   }
 ];
 
@@ -42,7 +42,9 @@ const AdminSideNavigation = () => {
     if (link) {
       if (label === "Add New Organization") {
         setAddOrgModalOpen(true);
-      } else {
+      } else if (label === "Manage Organizations") {
+        navigate(link);
+      } else if (label === "Dashboard") {
         navigate(link);
       }
     }
