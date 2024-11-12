@@ -4,6 +4,8 @@ const User = require('../models/UserLoginModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authController = require('../controllers/authController');
+const { sendVerificationCode } = require('../services/emailService');
+const VerificationCode = require('../models/VerificationCode');
 
 router.post('/register', async (req, res) => {
     try {
@@ -182,6 +184,109 @@ router.get('/user-details', extractUser, async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching user details' });
+  }
+});
+
+// Add this new route to your existing authRoutes.js
+router.get('/me', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'c0a60eb64e68204f3c090e3609a203ad7eed4281c5508066391eb024de0b1b72a9c5d5ce6155a7f641fcb36b35cd65979dab085d039883d1ffacf77cac68e79a');
+        const user = await User.findById(decoded.id).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(user);
+    } catch (error) {
+        console.error('Error in /me route:', error);
+        res.status(401).json({ error: 'Invalid token' });
+    }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ error: 'No account found with this email' });
+    }
+
+    // Generate 6-digit code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save code to database
+    await VerificationCode.create({
+      email,
+      code: verificationCode
+    });
+
+    // Send email
+    const emailSent = await sendVerificationCode(email, verificationCode);
+
+    if (!emailSent) {
+      return res.status(500).json({ error: 'Failed to send verification code' });
+    }
+
+    res.json({ message: 'Verification code sent to email' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/verify-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    
+    const verificationRecord = await VerificationCode.findOne({ email, code });
+    
+    if (!verificationRecord) {
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+
+    // Delete the verification code after successful verification
+    await VerificationCode.deleteOne({ _id: verificationRecord._id });
+    
+    // Generate a temporary token for password reset
+    const resetToken = jwt.sign(
+      { email },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({ message: 'Code verified successfully', resetToken });
+  } catch (error) {
+    console.error('Code verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+    
+    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    const user = await User.findOne({ email: decoded.email });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Let the User model's pre-save middleware handle the hashing
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ error: 'Invalid or expired reset token' });
   }
 });
 

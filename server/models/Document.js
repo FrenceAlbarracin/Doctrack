@@ -25,7 +25,7 @@ const documentSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['pending', 'in-transit', 'delivered', 'rejected'],
-        default: 'pending',
+        default: 'Accept',
     },
     createdAt: {
         type: Date,

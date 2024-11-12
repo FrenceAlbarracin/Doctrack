@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import styles from './SideNavigation.module.css';
 import { NavigationItem } from './NavigationItem';
@@ -10,8 +10,8 @@ axios.defaults.baseURL = 'http://localhost:2000'; // or whatever port your backe
 const navigationItems = [
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/005c7a1fc7b800da9ed0eb7da389c028dba409099cc177f99c94e1fb260ee196?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Dashboard", isActive: true, link: "/dashboard" },
   { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/b926edca9da2bd02e758e006f2ebaf4a5943ec2e14c0bc7043ff1638257afb48?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "New Document" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/62af66e9f4c012032bfebdb68e774d2cca1b439bb2c9f816d6066d03b5c1cafc?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transfer In" },
-  { icon: "/images/icon.png", label: "Pending" },
+  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/62af66e9f4c012032bfebdb68e774d2cca1b439bb2c9f816d6066d03b5c1cafc?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transfer In", link: "/dashboard/transfer-in", status: "in-transit" },
+  { icon: "/images/icon.png", label: "Pending", link: "/dashboard/pending", status: "pending" },
 ];
 
 const documentItems = [
@@ -26,12 +26,6 @@ const SideNavigation = () => {
   const [modalContent, setModalContent] = useState('');
   const [modalTitle, setModalTitle] = useState('');
   const navigate = useNavigate(); // Initialize useNavigate
-  const [recipients, setRecipients] = useState([
-    'SSC',
-    'SBO',
-    'COMSOC',
-    // Add more recipients as needed
-  ]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
@@ -39,10 +33,83 @@ const SideNavigation = () => {
     const now = new Date();
     return now.toISOString().slice(0, 16); // Format: "YYYY-MM-DDThh:mm"
   });
+  const [statusCounts, setStatusCounts] = useState({
+    pending: 0,
+    inTransit: 0
+  });
+  const [userOrg, setUserOrg] = useState(null);
+  const [organizations, setOrganizations] = useState([]);
 
-  const handleItemClick = (label) => {
-    if (label === "Dashboard") {
-      navigate('/dashboard');
+  useEffect(() => {
+    // Get user data when component mounts
+    const getUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await axios.get('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setUserOrg(response.data.organization);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    getUserData();
+  }, []);
+
+  useEffect(() => {
+    const fetchStatusCounts = async () => {
+      try {
+        if (!userOrg) return; // Don't fetch if we don't have user organization
+        
+        console.log('Fetching counts for organization:', userOrg);
+        const response = await axios.get(`/api/documents/status-counts?organization=${userOrg}`);
+        console.log('Status counts response:', response.data);
+        
+        setStatusCounts({
+          pending: response.data.pending || 0,
+          inTransit: response.data.inTransit || 0
+        });
+      } catch (error) {
+        console.error('Error fetching status counts:', error);
+        if (error.response) {
+          console.error('Error response:', error.response.data);
+        }
+      }
+    };
+
+    if (userOrg) {
+      fetchStatusCounts();
+      const interval = setInterval(fetchStatusCounts, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [userOrg]); // Depend on userOrg
+
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const response = await axios.get('/api/organizations');
+        setOrganizations(response.data);
+      } catch (error) {
+        console.error('Error fetching organizations:', error);
+      }
+    };
+
+    fetchOrganizations();
+  }, []);
+
+  const handleItemClick = (label, link) => {
+    if (link) {
+      if (label === "Transfer In") {
+        navigate('/dashboard', { state: { filter: 'Accept' } });
+      } else if (label === "Pending") {
+        navigate('/dashboard', { state: { filter: 'pending' } });
+      } else {
+        navigate(link);
+      }
     } else if (label === "New Document") {
       setModalTitle("New Document");
       setModalContent("new-document");
@@ -102,8 +169,11 @@ const SideNavigation = () => {
   return (
     <nav className={styles.sideNav}>
       {navigationItems.map((item, index) => (
-        <div key={index} onClick={() => handleItemClick(item.label)}>
-          <NavigationItem {...item} />
+        <div key={index} onClick={() => handleItemClick(item.label, item.link)}>
+          <NavigationItem 
+            {...item} 
+            counts={item.status ? statusCounts : null} 
+          />
         </div>
       ))}
       
@@ -145,9 +215,41 @@ const SideNavigation = () => {
               <label className={styles.label}>Recipient</label>
               <select name="recipient" className={styles.select} required>
                 <option value="">Select Recipient</option>
-                {recipients.map((recipient, index) => (
-                  <option key={index} value={recipient}>{recipient}</option>
-                ))}
+                <optgroup label="USG/Institutional">
+                  {organizations
+                    .filter(org => org.type === 'USG/Institutional')
+                    .map((org) => (
+                      <option key={org._id} value={org.name}>{org.name}</option>
+                    ))}
+                </optgroup>
+                <optgroup label="Academic Organizations">
+                  {organizations
+                    .filter(org => org.type === 'ACADEMIC')
+                    .map((org) => (
+                      <option key={org._id} value={org.name}>{org.name}</option>
+                    ))}
+                </optgroup>
+                <optgroup label="Civic Organizations">
+                  {organizations
+                    .filter(org => org.type === 'CIVIC')
+                    .map((org) => (
+                      <option key={org._id} value={org.name}>{org.name}</option>
+                    ))}
+                </optgroup>
+                <optgroup label="Religious Organizations">
+                  {organizations
+                    .filter(org => org.type === 'RELIGIOUS')
+                    .map((org) => (
+                      <option key={org._id} value={org.name}>{org.name}</option>
+                    ))}
+                </optgroup>
+                <optgroup label="Fraternity and Sorority">
+                  {organizations
+                    .filter(org => org.type === 'FRATERNITY AND SORORITY')
+                    .map((org) => (
+                      <option key={org._id} value={org.name}>{org.name}</option>
+                    ))}
+                </optgroup>
               </select>
             </div>
             

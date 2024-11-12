@@ -1,7 +1,11 @@
 import styles from './TransactionHistory.module.css';
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export function TransactionHistory() {
+  const location = useLocation();
+  const filterType = location.state?.filter;
+
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [documentHistory, setDocumentHistory] = useState(null);
   const [sortOption, setSortOption] = useState('newest');
@@ -83,16 +87,28 @@ export function TransactionHistory() {
       totalPages: 0
     };
     
-    let filteredData = data.filter(item => 
+    let filteredData = data;
+    
+    // First filter by organization
+    filteredData = filteredData.filter(item => 
       userOrganization === 'admin' ? true : item.recipient === userOrganization
     );
     
+    // Then filter by type (Transfer In or Pending)
+    if (filterType === 'Accept') {
+      filteredData = filteredData.filter(item => item.status === 'Accept');
+    } else if (filterType === 'pending') {
+      filteredData = filteredData.filter(item => item.status === 'pending');
+    }
+    
+    // Then apply search filter
     filteredData = filteredData.filter(item => 
       item.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
+    // Apply sorting
     switch (sortOption) {
       case 'newest':
         filteredData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
