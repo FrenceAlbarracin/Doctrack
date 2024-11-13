@@ -10,8 +10,12 @@ router.get('/debug', async (req, res) => {
     try {
         const documents = await AllDocument.find({});
         console.log('Debug documents found:', documents);
+        const org = 'Supreme Student Council';
+        const orgDocs = documents.filter(doc => doc.recipient === org);
+        console.log('Documents for org:', orgDocs);
         res.json({
             count: documents.length,
+            orgCount: orgDocs.length,
             documents: documents
         });
     } catch (error) {
@@ -20,18 +24,22 @@ router.get('/debug', async (req, res) => {
     }
 });
 
+// Add these routes at the top of your routes
+router.get('/daily-stats', documentController.getDailyStats);
+router.get('/recipient-stats', documentController.getRecipientStats);
+
 // Main documents route
 router.get('/documents/all', async (req, res) => {
-    try {
-        console.log('Fetching all documents...');
-        const documents = await AllDocument.find({}).sort({ createdAt: -1 });
-        console.log(`Found ${documents.length} documents`);
-        console.log(documents)
-        res.json(documents);
-    } catch (error) {
-        console.error('Error in /documents/all:', error);
-        res.status(500).json({ error: error.message });
-    }
+  try {
+      console.log('Fetching all documents...');
+      const documents = await AllDocument.find({}).sort({ createdAt: -1 });
+      console.log(`Found ${documents.length} documents`);
+      console.log(documents)
+      res.json(documents);
+  } catch (error) {
+      console.error('Error in /documents/all:', error);
+      res.status(500).json({ error: error.message });
+  }
 });
 
 router.get('/status-counts', async (req, res) => {
@@ -43,6 +51,8 @@ router.get('/status-counts', async (req, res) => {
         error: 'Organization parameter is required'
       });
     }
+
+    console.log('Checking counts for organization:', userOrganization);
 
     const acceptCount = await AllDocument.countDocuments({ 
       recipient: userOrganization,
@@ -61,14 +71,22 @@ router.get('/status-counts', async (req, res) => {
     
     const finishedCount = await AllDocument.countDocuments({ 
       recipient: userOrganization,
-      status: 'delivered'
+      status: 'Delivered'
     });
 
     const transferredCount = await AllDocument.countDocuments({ 
       recipient: userOrganization,
-      status: 'rejected'
+      status: 'Rejected'
     });
     
+    console.log('Counts:', {
+      accept: acceptCount,
+      pending: pendingCount,
+      keeping: keepingCount,
+      finished: finishedCount,
+      transferred: transferredCount
+    });
+
     res.json({
       accept: acceptCount,
       pending: pendingCount,
@@ -87,13 +105,6 @@ router.get('/history', documentController.getAllDocumentHistory);
 
 // Route to get movement history of a specific document by ID
 router.get('/:id/history', validateDocumentId, documentController.getDocumentHistoryById);
-
-// Add this new route
-router.get('/recipient-stats', documentController.getRecipientStats);
-
-// Add this new route
-router.get('/daily-stats', documentController.getDailyStats);
-
 // Add this after your existing routes
 router.get('/history/:id', async (req, res) => {
   try {
@@ -147,34 +158,37 @@ router.put('/update-status/:id', async (req, res) => {
     const { id } = req.params;
     const { status, remarks } = req.body;
     
-    const document = await AllDocument.findByIdAndUpdate(
+    // First, get the current document to access its current status
+    const currentDocument = await AllDocument.findById(id);
+    if (!currentDocument) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    // Then update the document
+    const updatedDocument = await AllDocument.findByIdAndUpdate(
       id,
       { 
         status,
-        remarks: remarks || document.remarks,
+        remarks: remarks || currentDocument.remarks,
         updatedAt: new Date()
       },
       { new: true }
     );
 
-    if (!document) {
-      return res.status(404).json({ error: 'Document not found' });
-    }
-
     // Create history entry for status change
     const history = new DocumentHistory({
-      documentId: document._id,
+      documentId: updatedDocument._id,
       action: 'Status Updated',
       description: `Document status changed to "${status}"${remarks ? ` - Remarks: ${remarks}` : ''}`,
       details: {
-        previousStatus: document.status,
+        previousStatus: currentDocument.status,
         newStatus: status,
         remarks: remarks
       }
     });
     await history.save();
 
-    res.json(document);
+    res.json(updatedDocument);
   } catch (error) {
     console.error('Error updating document status:', error);
     res.status(500).json({ error: 'Failed to update document status' });
@@ -184,6 +198,14 @@ router.put('/update-status/:id', async (req, res) => {
 router.put('/forward/:id', async (req, res) => {
   try {
     const { status, forwardTo, remarks, documentCopy, routePurpose, forwardedBy, forwardedAt } = req.body;
+    
+    // First get the current document to preserve the current recipient
+    const currentDocument = await AllDocument.findById(req.params.id);
+    if (!currentDocument) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const forwardedFrom = currentDocument.recipient; // Store the current recipient as forwardedFrom
     
     // Update document status and details
     const document = await AllDocument.findByIdAndUpdate(
@@ -199,21 +221,19 @@ router.put('/forward/:id', async (req, res) => {
       { new: true }
     );
 
-    if (!document) {
-      return res.status(404).json({ error: 'Document not found' });
-    }
-
     // Create history entry for forwarding
     const history = new DocumentHistory({
       documentId: document._id,
       action: 'Forward Document',
-      description: `Document forwarded from ${forwardedBy} to ${forwardTo}`,
+      description: `Document forwarded from ${forwardedFrom} to ${forwardTo}`,
       details: {
+        forwardedFrom, // Add the previous recipient
         forwardedBy,
         forwardTo,
         remarks,
         documentCopy,
-        routePurpose
+        routePurpose,
+        description: `Document forwarded from ${forwardedFrom} to ${forwardTo}` // Add description
       },
       date: forwardedAt
     });

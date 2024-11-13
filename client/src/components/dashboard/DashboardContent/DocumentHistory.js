@@ -157,6 +157,33 @@ export function DocumentHistory({ type }) {
     }
   };
 
+  const handleStatusChange = async (documentId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'Accept' ? 'pending' : 'Accept';
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:2000/api/documents/update-status/${documentId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          status: newStatus,
+          documentId: documentId,
+          forwardedFrom: userOrg,
+          description: `Status changed from ${currentStatus} to ${newStatus}`,
+          remarks: 'Status update'
+        })
+      });
+
+      // ... rest of the function
+    } catch (error) {
+      console.error('Error updating document status:', error);
+      alert('Failed to update status. Please try again.');
+    }
+  };
+
   return (
     <section className={styles.historySection}>
       <header className={styles.historyHeader}>
@@ -299,20 +326,27 @@ export function DocumentHistory({ type }) {
                     </span>
                   </div>
                   <div className={styles.historyOffice}>
-                    {entry.action === 'Forward Document' ? entry.details.forwardTo : entry.office}
+                    {entry.office}
                   </div>
                   <div className={styles.historyActionDetails}>
-                    Actions Taken: {entry.details?.remarks || entry.description || 'No actions specified'}
+                    {entry.details?.forwardedFrom && (
+                      <div className={styles.forwardedFrom}>
+                        Forwarded From: {entry.details.forwardedFrom}
+                      </div>
+                    )}
                     {entry.details?.description && (
                       <div>Description: {entry.details.description}</div>
                     )}
-                    {entry.details?.remarks && entry.details?.remarks !== entry.details?.description && (
+                    {entry.details?.remarks && (
                       <div>Remarks: {entry.details.remarks}</div>
+                    )}
+                    {entry.description && !entry.details?.description && (
+                      <div>Actions Taken: {entry.description}</div>
                     )}
                   </div>
                   {entry.details?.forwardTo && (
                     <div className={styles.historyForward}>
-                      Forwarded to {entry.details.forwardTo}
+                      Forwarded to: {entry.details.forwardTo}
                     </div>
                   )}
                 </div>
