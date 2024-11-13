@@ -38,7 +38,7 @@ export default function PendingUsers() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:2000/api/admin/users/${userId}/approve`, {
+      const response = await fetch(`http://localhost:2000/api/users/approve/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
