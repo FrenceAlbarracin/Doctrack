@@ -200,3 +200,34 @@
 }
 
 
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #4B5563;
+}
+
+.user-info-box {
+  padding: 12px 16px;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+}
+
+.username {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.organization-text {
+  font-size: 13px;
+  color: #6B7280;
+}
+
+

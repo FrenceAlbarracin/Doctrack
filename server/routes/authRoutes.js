@@ -190,25 +190,13 @@ router.get('/user-details', extractUser, async (req, res) => {
 });
 
 // Add this new route to your existing authRoutes.js
-router.get('/me', async (req, res) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ error: 'No token provided' });
-        }
-
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.id).select('-password');
-        
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json(user);
-    } catch (error) {
-        console.error('Error in /me route:', error);
-        res.status(401).json({ error: 'Invalid token' });
-    }
+router.get('/me', extractUser, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user data' });
+  }
 });
 
 router.post('/forgot-password', async (req, res) => {

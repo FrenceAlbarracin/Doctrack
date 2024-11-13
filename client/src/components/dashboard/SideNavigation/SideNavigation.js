@@ -59,6 +59,7 @@ const SideNavigation = () => {
   });
   const [userOrg, setUserOrg] = useState(null);
   const [organizations, setOrganizations] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     // Get user data when component mounts
@@ -78,6 +79,22 @@ const SideNavigation = () => {
     };
 
     getUserData();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:2000/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCurrentUser(response.data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   useEffect(() => {
@@ -155,11 +172,16 @@ const SideNavigation = () => {
     setError(null);
 
     const formData = new FormData(e.target);
+    const token = localStorage.getItem('token');
+    const response = await axios.get('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
     const documentData = {
       serialNumber: formData.get('serialNumber'),
       documentName: formData.get('documentName'),
       recipient: formData.get('recipient'),
-      userId: formData.get('userId'),
+      userId: response.data.username,
       remarks: formData.get('remarks'),
       status: 'pending',
       createdAt: formData.get('createdAt') || new Date().toISOString(),
@@ -279,15 +301,12 @@ const SideNavigation = () => {
               </select>
             </div>
             
-            <div className={styles.formGroup}>
-              <label className={styles.label}>User ID</label>
-              <input 
-                name="userId"
-                type="text" 
-                placeholder="Enter User ID" 
-                className={styles.input}
-                required 
-              />
+            <div className="form-group">
+              <label className="form-label">User Information</label>
+              <div className="user-info-box">
+                <div className="username">{currentUser?.username}</div>
+                <div className="organization-text">from: {currentUser?.organization}</div>
+              </div>
             </div>
             
             <div className={styles.formGroup}>
