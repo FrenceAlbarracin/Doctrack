@@ -1,6 +1,5 @@
 const documentHandler = {};
 
-const AllDocument = require('../models/Document');
 const Document = require('../models/Document');
 const DocumentHistory = require('../models/DocumentHistory');
 
@@ -8,7 +7,7 @@ const DocumentHistory = require('../models/DocumentHistory');
 
 documentHandler.debug = async (req, res)=>{
     try {
-        const documents = await AllDocument.find({});
+        const documents = await Document.find({});
         console.log('Debug documents found:', documents);
         const org = 'Supreme Student Council';
         const orgDocs = documents.filter(doc => doc.recipient === org);
@@ -98,7 +97,7 @@ documentHandler.newDocument = async(req, res)=>{
 documentHandler.getAll = async (req, res) => {
     try {
         console.log('Fetching all documents...');
-        const documents = await AllDocument.find({}).sort({ createdAt: -1 });
+        const documents = await Document.find({}).sort({ createdAt: -1 });
         console.log(`Found ${documents.length} documents`);
         console.log(documents)
         res.json(documents);
@@ -120,27 +119,27 @@ documentHandler.statusCount = async (req, res) =>{
     
         console.log('Checking counts for organization:', userOrganization);
     
-        const acceptCount = await AllDocument.countDocuments({ 
+        const acceptCount = await Document.countDocuments({ 
           recipient: userOrganization,
           status: 'Accept'
         });
     
-        const pendingCount = await AllDocument.countDocuments({ 
+        const pendingCount = await Document.countDocuments({ 
           recipient: userOrganization,
           status: 'pending'
         });
     
-        const keepingCount = await AllDocument.countDocuments({ 
+        const keepingCount = await Document.countDocuments({ 
           recipient: userOrganization,
           status: 'Keeping the Document'
         });
         
-        const finishedCount = await AllDocument.countDocuments({ 
+        const finishedCount = await Document.countDocuments({ 
           recipient: userOrganization,
           status: 'Delivered'
         });
     
-        const transferredCount = await AllDocument.countDocuments({ 
+        const transferredCount = await Document.countDocuments({ 
           recipient: userOrganization,
           status: 'Rejected'
         });
@@ -168,7 +167,7 @@ documentHandler.statusCount = async (req, res) =>{
 
 documentHandler.historyID = async (req, res) =>{
     try {
-        const document = await AllDocument.findById(req.params.id);
+        const document = await Document.findById(req.params.id);
         if (!document) {
           return res.status(404).json({ message: 'Document not found' });
         }
@@ -219,13 +218,13 @@ documentHandler.updateStatus = async(req, res)=>{
         const { status, remarks } = req.body;
         
         // First, get the current document to access its current status
-        const currentDocument = await AllDocument.findById(id);
+        const currentDocument = await Document.findById(id);
         if (!currentDocument) {
           return res.status(404).json({ error: 'Document not found' });
         }
     
         // Then update the document
-        const updatedDocument = await AllDocument.findByIdAndUpdate(
+        const updatedDocument = await Document.findByIdAndUpdate(
           id,
           { 
             status,
@@ -260,7 +259,7 @@ documentHandler.forward = async(req, res)=>{
         const { status, forwardTo, remarks, documentCopy, routePurpose, forwardedBy, forwardedAt } = req.body;
         
         // First get the current document to preserve the current recipient
-        const currentDocument = await AllDocument.findById(req.params.id);
+        const currentDocument = await Document.findById(req.params.id);
         if (!currentDocument) {
           return res.status(404).json({ error: 'Document not found' });
         }
@@ -268,7 +267,7 @@ documentHandler.forward = async(req, res)=>{
         const forwardedFrom = currentDocument.recipient; // Store the current recipient as forwardedFrom
         
         // Update document status and details
-        const document = await AllDocument.findByIdAndUpdate(
+        const document = await Document.findByIdAndUpdate(
           req.params.id,
           {
             status,
