@@ -1,9 +1,10 @@
 require('dotenv').config();
 // Import routes
-const authRoutes = require('./routes/authRoutes');
-const documentRoutes = require('./routes/document');
-const organizationRoutes = require('./routes/organizationRoutes');
-const userRoutes = require ('./routes/userRoutes')
+
+const api = require('./routes/api')
+
+
+
 
 const express = require('express');
 const cors = require('cors');
@@ -19,10 +20,8 @@ app.use(express.json());
 
 
 // Use routes
-app.use('/api/auth', authRoutes);
-app.use('/api/documents', documentRoutes);
-app.use('/api/organizations', organizationRoutes);
-app.use('/api/users',userRoutes);
+app.use('/api', api);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
