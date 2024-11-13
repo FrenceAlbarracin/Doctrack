@@ -138,8 +138,9 @@ export function TransactionHistory() {
     setCurrentPage(pageNumber);
   };
 
-  const handleStatusChange = async (documentId) => {
+  const handleStatusChange = async (documentId, currentStatus) => {
     try {
+      const newStatus = currentStatus === 'Accept' ? 'pending' : 'Accept';
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:2000/api/documents/update-status/${documentId}`, {
         method: 'PUT',
@@ -147,14 +148,14 @@ export function TransactionHistory() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ status: 'Accept' })
+        body: JSON.stringify({ status: newStatus })
       });
 
       if (response.ok) {
         // Update the local state to reflect the change
         setDocumentData(prevData => 
           prevData.map(doc => 
-            doc._id === documentId ? { ...doc, status: 'Accept' } : doc
+            doc._id === documentId ? { ...doc, status: newStatus } : doc
           )
         );
       } else {
@@ -256,7 +257,7 @@ export function TransactionHistory() {
                   {transaction.status === 'Accept' && (
                     <button 
                       className={styles.acceptButton}
-                      onClick={() => handleStatusChange(transaction._id)}
+                      onClick={() => handleStatusChange(transaction._id, transaction.status)}
                       type="button"
                     >
                       Accept

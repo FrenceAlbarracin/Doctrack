@@ -209,7 +209,7 @@ async function seedDocuments() {
             doc.userId = "user123";
             doc.createdBy = "64f1f3c1e2c1e123456789ab";
             // Convert status to match enum values
-            if (doc.status === 'In Progress') doc.status = 'in-transit';
+            if (doc.status === 'In Progress') doc.status = 'Keeping the Document';
             if (doc.status === 'Under Review' || doc.status === 'Pending') doc.status = 'pending';
         });
 

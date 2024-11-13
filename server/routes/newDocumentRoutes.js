@@ -11,14 +11,16 @@ router.post('/', async function(req, res) {
       description,
       recipient,
       userId,
-      remarks
+      remarks,
+      currentOffice,
+      originalSender
     } = req.body;
 
     // Validate required fields
-    if (!serialNumber || !documentName || !recipient || !userId) {
+    if (!serialNumber || !documentName || !recipient || !userId || !currentOffice || !originalSender) {
       return res.status(400).json({ 
         success: false,
-        message: 'Please fill all required fields' 
+        message: 'Please fill all required fields (including currentOffice and originalSender)' 
       });
     }
 
@@ -31,7 +33,10 @@ router.post('/', async function(req, res) {
       userId,
       remarks: remarks || '',
       status: 'Accept',
-      createdAt: new Date()
+      createdAt: new Date(),
+      currentOffice,
+      originalSender,
+      previousOffices: []
     });
 
     await newDocument.save();
