@@ -7,6 +7,8 @@ const documentHandler = require('../handlers/documentsHandler')
 // Debug route
 router.get('/debug', documentHandler.debug);
 
+router.post('/new', documentHandler.newDocument);
+
 // Add these routes at the top of your routes
 router.get('/daily-stats', documentController.getDailyStats);
 router.get('/recipient-stats', documentController.getRecipientStats);

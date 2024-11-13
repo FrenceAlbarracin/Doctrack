@@ -1,6 +1,7 @@
 const documentHandler = {};
 
 const AllDocument = require('../models/Document');
+const Document = require('../models/Document');
 const DocumentHistory = require('../models/DocumentHistory');
 
 
@@ -21,6 +22,77 @@ documentHandler.debug = async (req, res)=>{
         console.error('Debug route error:', error);
         res.status(500).json({ error: error.message });
     }
+}
+
+documentHandler.newDocument = async(req, res)=>{
+    try {
+        const {
+          serialNumber,
+          documentName,
+          description,
+          recipient,
+          userId,
+          remarks,
+          currentOffice,
+          originalSender
+        } = req.body;
+    
+        // Validate required fields
+        if (!serialNumber || !documentName || !recipient || !userId || !currentOffice || !originalSender) {
+          return res.status(400).json({ 
+            success: false,
+            message: 'Please fill all required fields (including currentOffice and originalSender)' 
+          });
+        }
+    
+        // Create new document
+        const newDocument = new Document({
+          serialNumber,
+          documentName,
+          description: description || '',
+          recipient,
+          userId,
+          remarks: remarks || '',
+          status: 'Accept',
+          createdAt: new Date(),
+          currentOffice,
+          originalSender,
+          previousOffices: []
+        });
+    
+        await newDocument.save();
+    
+        // Create history entry
+        const history = new DocumentHistory({
+          documentId: newDocument._id,
+          action: 'Document Created',
+          description: `Document "${documentName}" was created by ${userId}`
+        });
+        await history.save();
+    
+        res.status(201).json({
+          success: true,
+          document: newDocument,
+          message: 'Document created successfully'
+        });
+    
+      } catch (error) {
+        console.error('Error creating document:', error);
+        
+        if (error.code === 11000) {
+          return res.status(400).json({
+            success: false,
+            message: 'This Serial Number is already in use.',
+            error: error.message
+          });
+        }
+    
+        res.status(500).json({ 
+          success: false,
+          message: 'An error occurred while creating the document.',
+          error: error.message
+        });
+      }
 }
 
 documentHandler.getAll = async (req, res) => {
