@@ -11,6 +11,10 @@ const documentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    description: {
+        type: String,
+        required: true,
+    },
     recipient: {
         type: String,
         required: true,
@@ -21,10 +25,11 @@ const documentSchema = new mongoose.Schema({
     },
     remarks: {
         type: String,
+        required: true,
     }, 
     status: {
         type: String,
-        enum: ['pending', 'in-transit', 'delivered', 'rejected'],
+        enum: ['pending', 'in-transit', 'delivered', 'rejected', 'Accept'],
         default: 'Accept',
     },
     createdAt: {
@@ -36,7 +41,6 @@ const documentSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    // Add any additional fields you need
 });
 
 // Only create index for serialNumber

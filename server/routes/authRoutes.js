@@ -7,6 +7,8 @@ const authController = require('../controllers/authController');
 const { sendVerificationCode } = require('../services/emailService');
 const VerificationCode = require('../models/VerificationCode');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'c0a60eb64e68204f3c090e3609a203ad7eed4281c5508066391eb024de0b1b72a9c5d5ce6155a7f641fcb36b35cd65979dab085d039883d1ffacf77cac68e79a';
+
 router.post('/register', async (req, res) => {
     try {
         const { username, email, password, organization } = req.body;
@@ -136,7 +138,7 @@ router.post('/login', async (req, res) => {
                 role: user.role,
                 status: user.status 
             },
-            process.env.JWT_SECRET || 'your-secret-key',
+            JWT_SECRET,
             { expiresIn: '1h' }
         );
 
@@ -166,7 +168,7 @@ const extractUser = async (req, res, next) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
@@ -195,7 +197,7 @@ router.get('/me', async (req, res) => {
             return res.status(401).json({ error: 'No token provided' });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'c0a60eb64e68204f3c090e3609a203ad7eed4281c5508066391eb024de0b1b72a9c5d5ce6155a7f641fcb36b35cd65979dab085d039883d1ffacf77cac68e79a');
+        const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.id).select('-password');
         
         if (!user) {
@@ -257,7 +259,7 @@ router.post('/verify-code', async (req, res) => {
     // Generate a temporary token for password reset
     const resetToken = jwt.sign(
       { email },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '15m' }
     );
 
@@ -272,21 +274,79 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { resetToken, newPassword } = req.body;
     
-    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ error: 'Reset token and new password are required' });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(resetToken, JWT_SECRET);
+      console.log('Decoded token:', decoded);
+    } catch (jwtError) {
+      console.error('JWT verification error:', jwtError);
+      return res.status(401).json({ error: 'Invalid or expired reset token' });
+    }
+
     const user = await User.findOne({ email: decoded.email });
+    console.log('Found user:', user ? 'Yes' : 'No');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Let the User model's pre-save middleware handle the hashing
-    user.password = newPassword;
-    await user.save();
+    try {
+      // Hash the new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      
+      // Update the password directly using findOneAndUpdate
+      await User.findOneAndUpdate(
+        { email: decoded.email },
+        { $set: { password: hashedPassword } },
+        { new: true }
+      );
 
-    res.json({ message: 'Password reset successful' });
+      console.log('Password reset successful for user:', decoded.email);
+      return res.json({ message: 'Password reset successful' });
+    } catch (hashError) {
+      console.error('Password hashing error:', hashError);
+      return res.status(500).json({ error: 'Error while updating password' });
+    }
   } catch (error) {
     console.error('Password reset error:', error);
-    res.status(500).json({ error: 'Invalid or expired reset token' });
+    return res.status(500).json({ error: 'Internal server error during password reset' });
+  }
+});
+
+router.post('/resend-code', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ error: 'No account found with this email' });
+    }
+
+    // Generate new 6-digit code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save new code to database
+    await VerificationCode.create({
+      email,
+      code: verificationCode
+    });
+
+    // Send email with new code
+    const emailSent = await sendVerificationCode(email, verificationCode);
+
+    if (!emailSent) {
+      return res.status(500).json({ error: 'Failed to send verification code' });
+    }
+
+    res.json({ message: 'New verification code sent to email' });
+  } catch (error) {
+    console.error('Resend code error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

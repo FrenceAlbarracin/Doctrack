@@ -105,7 +105,9 @@ export function TransactionHistory() {
     filteredData = filteredData.filter(item => 
       item.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.remarks || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
     
     // Apply sorting
@@ -130,6 +132,33 @@ export function TransactionHistory() {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
+  };
+
+  const handleStatusChange = async (documentId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:2000/api/documents/update-status/${documentId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'Accept' })
+      });
+
+      if (response.ok) {
+        // Update the local state to reflect the change
+        setDocumentData(prevData => 
+          prevData.map(doc => 
+            doc._id === documentId ? { ...doc, status: 'Accept' } : doc
+          )
+        );
+      } else {
+        console.error('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating document status:', error);
+    }
   };
 
   if (loading) {
@@ -180,9 +209,10 @@ export function TransactionHistory() {
           <tr>
             <th>Serial Number</th>
             <th>Document Name</th>
+            <th>Description</th>
+            <th>Remarks</th>
             <th>Recipient</th>
             <th>Date Created</th>
-            <th>Modified</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -199,19 +229,31 @@ export function TransactionHistory() {
                   </button>
                 </td>
                 <td>{transaction.documentName}</td>
+                <td>{transaction.description || '-'}</td>
+                <td>{transaction.remarks || '-'}</td>
                 <td>{transaction.recipient}</td>
                 <td>{formatDate(transaction.createdAt)}</td>
-                <td>{formatDate(transaction.modified)}</td>
                 <td>
-                  <span className={`${styles.status} ${styles[transaction.status.toLowerCase().replace(" ", "")]}`}>
-                    {transaction.status}
-                  </span>
+                  {transaction.status === 'Accept' && (
+                    <button 
+                      className={styles.acceptButton}
+                      onClick={() => handleStatusChange(transaction._id)}
+                      type="button"
+                    >
+                      Accept
+                    </button>
+                  )}
+                  {transaction.status !== 'Accept' && (
+                    <span className={`${styles.status} ${styles[transaction.status.toLowerCase().replace(/\s+/g, "")]}`}>
+                      {transaction.status}
+                    </span>
+                  )}
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
+              <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
                 No documents found
               </td>
             </tr>

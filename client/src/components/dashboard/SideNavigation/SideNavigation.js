@@ -8,17 +8,37 @@ import axios from 'axios';
 axios.defaults.baseURL = 'http://localhost:2000'; // or whatever port your backend is running on
 
 const navigationItems = [
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/005c7a1fc7b800da9ed0eb7da389c028dba409099cc177f99c94e1fb260ee196?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Dashboard", isActive: true, link: "/dashboard" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/b926edca9da2bd02e758e006f2ebaf4a5943ec2e14c0bc7043ff1638257afb48?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "New Document" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/62af66e9f4c012032bfebdb68e774d2cca1b439bb2c9f816d6066d03b5c1cafc?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transfer In", link: "/dashboard/transfer-in", status: "in-transit" },
-  { icon: "/images/icon.png", label: "Pending", link: "/dashboard/pending", status: "pending" },
+  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/005c7a1fc7b800da9ed0eb7da389c028dba409099cc177f99c94e1fb260ee196?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Dashboard", isActive: true, link: "/dashboard", view: "documents" },
+  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/b926edca9da2bd02e758e006f2ebaf4a5943ec2e14c0bc7043ff1638257afb48?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "New Document", view: "transactions" },
+  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/62af66e9f4c012032bfebdb68e774d2cca1b439bb2c9f816d6066d03b5c1cafc?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transfer In", link: "/dashboard/transfer-in", status: "in-transit", view: "transactions" },
+  { icon: "/images/icon.png", label: "Pending", link: "/dashboard/pending", status: "pending", view: "transactions" },
 ];
 
 const documentItems = [
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/5eb33c88da331cbd7c80d172ba8a5de6d7debd99be7fac7149b15af2863f8670?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "All", link: "../TransactionHistory" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/299f0b10ae60643f7737cf49c147dcc13c34aad7e5b16295767fbcbfae42acd2?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "In Transit" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/c23e99a6561a8d6f026efdd6ce16ade880ca84befe6ed8629ae672d7b96ade03?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Finished" },
-  { icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/83feaa9ecdedbf3d72e64b4b4994f571d0ef35f7cef23d1c2e8aae75d542019c?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a", label: "Transferred Out" },
+  { 
+    icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/5eb33c88da331cbd7c80d172ba8a5de6d7debd99be7fac7149b15af2863f8670", 
+    label: "All", 
+    link: "/dashboard/history",
+    view: "documents"
+  },
+  { 
+    icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/299f0b10ae60643f7737cf49c147dcc13c34aad7e5b16295767fbcbfae42acd2", 
+    label: "In Transit", 
+    link: "/dashboard/history/in-transit",
+    view: "documents"
+  },
+  { 
+    icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/c23e99a6561a8d6f026efdd6ce16ade880ca84befe6ed8629ae672d7b96ade03", 
+    label: "Finished", 
+    link: "/dashboard/history/finished",
+    view: "documents"
+  },
+  { 
+    icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/83feaa9ecdedbf3d72e64b4b4994f571d0ef35f7cef23d1c2e8aae75d542019c", 
+    label: "Transferred Out", 
+    link: "/dashboard/history/transferred",
+    view: "documents"
+  }
 ];
 
 const SideNavigation = () => {
@@ -101,22 +121,26 @@ const SideNavigation = () => {
     fetchOrganizations();
   }, []);
 
-  const handleItemClick = (label, link) => {
+  const handleItemClick = (label, link, view) => {
     if (link) {
       if (label === "Transfer In") {
-        navigate('/dashboard', { state: { filter: 'Accept' } });
+        navigate('/dashboard', { state: { filter: 'Accept', view } });
       } else if (label === "Pending") {
-        navigate('/dashboard', { state: { filter: 'pending' } });
+        navigate('/dashboard', { state: { filter: 'pending', view } });
+      } else if (label === "All") {
+        navigate('/dashboard', { state: { filter: 'all', view } });
+      } else if (label === "In Transit") {
+        navigate('/dashboard', { state: { filter: 'in-transit', view } });
+      } else if (label === "Finished") {
+        navigate('/dashboard', { state: { filter: 'finished', view } });
+      } else if (label === "Transferred Out") {
+        navigate('/dashboard', { state: { filter: 'transferred', view } });
       } else {
-        navigate(link);
+        navigate(link, { state: { view } });
       }
     } else if (label === "New Document") {
       setModalTitle("New Document");
       setModalContent("new-document");
-      setModalOpen(true);
-    } else {
-      setModalTitle(label);
-      setModalContent(label);
       setModalOpen(true);
     }
   };
@@ -169,7 +193,7 @@ const SideNavigation = () => {
   return (
     <nav className={styles.sideNav}>
       {navigationItems.map((item, index) => (
-        <div key={index} onClick={() => handleItemClick(item.label, item.link)}>
+        <div key={index} onClick={() => handleItemClick(item.label, item.link, item.view)}>
           <NavigationItem 
             {...item} 
             counts={item.status ? statusCounts : null} 
@@ -179,7 +203,9 @@ const SideNavigation = () => {
       
       <h2 className={styles.sectionTitle}>My Documents</h2>
       {documentItems.map((item, index) => (
-        <NavigationItem key={`doc-${index}`} {...item} />
+        <div key={`doc-${index}`} onClick={() => handleItemClick(item.label, item.link, item.view)}>
+          <NavigationItem {...item} />
+        </div>
       ))}
       
       

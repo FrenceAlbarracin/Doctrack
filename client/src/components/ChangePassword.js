@@ -35,6 +35,8 @@ const ChangePassword = () => {
 
     try {
       const resetToken = sessionStorage.getItem('resetToken');
+      console.log('Attempting password reset with token:', resetToken);
+
       const response = await fetch('http://localhost:2000/api/auth/reset-password', {
         method: 'POST',
         headers: {
@@ -47,21 +49,20 @@ const ChangePassword = () => {
       });
 
       const data = await response.json();
+      console.log('Server response:', data);
 
       if (response.ok) {
-        // Clear the reset token from session storage
         sessionStorage.removeItem('resetToken');
         sessionStorage.removeItem('resetEmail');
-        
-        // Navigate to login with success message
         navigate('/', { 
           state: { message: 'Password reset successful. Please login with your new password.' }
         });
       } else {
-        setError(data.error || 'Failed to reset password');
+        throw new Error(data.error || 'Failed to reset password');
       }
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      console.error('Reset password error:', err);
+      setError(err.message || 'Server error occurred. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,13 @@ const ChangePassword = () => {
               required 
             />
             <br />
-            <button type="submit" className="sign-in-btn">Change Password</button>
+            <button 
+              type="submit" 
+              className="sign-in-btn" 
+              disabled={loading}
+            >
+              {loading ? 'Resetting Password...' : 'Change Password'}
+            </button>
           </form>
         </div>
       </div>
