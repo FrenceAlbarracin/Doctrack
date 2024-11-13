@@ -29,7 +29,7 @@ router.get('/daily-stats', documentController.getDailyStats);
 router.get('/recipient-stats', documentController.getRecipientStats);
 
 // Main documents route
-router.get('/documents/all', async (req, res) => {
+router.get('/all', async (req, res) => {
   try {
       console.log('Fetching all documents...');
       const documents = await AllDocument.find({}).sort({ createdAt: -1 });

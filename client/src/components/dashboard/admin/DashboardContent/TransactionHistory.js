@@ -27,7 +27,7 @@ export function TransactionHistory() {
     const fetchDocument = async () => {
       try {
         console.log('Fetching documents...');
-        const response = await fetch('http://localhost:2000/api/documents/documents/all', {
+        const response = await fetch('http://localhost:2000/api/documents/all', {
           headers: {
             'Accept': 'application/json'
           }

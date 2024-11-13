@@ -50,7 +50,7 @@ export function DocumentHistory({ type }) {
       if (!userOrg) return;
 
       try {
-        const response = await axios.get('http://localhost:2000/api/documents/documents/all', {
+        const response = await axios.get('http://localhost:2000/api/documents/all', {
           params: {
             organization: userOrg,
             status: type

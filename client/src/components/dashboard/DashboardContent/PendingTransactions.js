@@ -45,7 +45,7 @@ export function PendingTransactions() {
     const fetchDocuments = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:2000/api/documents/documents/all', {
+        const response = await fetch('http://localhost:2000/api/documents/all', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
