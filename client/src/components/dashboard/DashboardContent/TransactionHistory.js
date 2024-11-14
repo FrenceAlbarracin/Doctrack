@@ -193,7 +193,7 @@ export function TransactionHistory() {
   return (
     <section className={styles.historySection}>
       <header className={styles.historyHeader}>
-        <h1 className={styles.historyTitle}>Transactions</h1>
+        <h1 className={styles.historyTitle}>Transfer In</h1>
         <div className={styles.controls}>
           <div className={styles.searchWrapper}>
             <img 
