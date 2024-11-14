@@ -8,6 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const app = express();
+const path = require('path');
 
 // Middleware
 app.use(cors({
@@ -33,6 +34,15 @@ mongoose.connect(process.env.MONGODB_URI)
         console.log('MongoDB Connected');
     })
     .catch(err => console.error('MongoDB connection error:', err));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Create uploads directory if it doesn't exist
+const fs = require('fs');
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
 
 const PORT = process.env.PORT || 2000 || 3000;
 app.listen(PORT, () => {

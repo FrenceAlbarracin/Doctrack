@@ -12,7 +12,6 @@ export function Header() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const profileMenuRef = useRef(null);
@@ -26,7 +25,6 @@ export function Header() {
         discoveryDocs: DISCOVERY_DOCS,
         scope: SCOPES,
       });
-      setIsAuthenticated(true);
     }
     gapi.load('client:auth2', start);
   }, []);
@@ -54,27 +52,17 @@ export function Header() {
     };
   }, []);
 
-  const handleAuthClick = async () => {
-    try {
-      console.log("Attempting to sign in...");
-      await gapi.auth2.getAuthInstance().signIn();
-      console.log("User signed in successfully");
-      // Proceed with fetching calendar data
-    } catch (error) {
-      console.error("Error during sign-in:", error);
-    }
-  };
-
-  const handleSignoutClick = () => {
-    gapi.auth2.getAuthInstance().signOut();
-  };
-
   const toggleProfileMenu = () => {
     setShowProfileMenu(!showProfileMenu);
   };
 
   const handleProfileClick = () => {
-    navigate('/dashboard/profile');
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user?.role === 'admin') {
+      navigate('/admin/profile', { state: { view: 'profile' } });
+    } else {
+      navigate('/dashboard/profile', { state: { view: 'profile' } });
+    }
     setShowProfileMenu(false);
   };
 

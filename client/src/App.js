@@ -9,6 +9,7 @@ import EnterCode from './components/EnterCode';
 import ChangePassword from './components/ChangePassword';
 
 import AdminRoutes from './components/dashboard/admin/AdminRoutes';
+import { UserProfile } from './components/dashboard/DashboardContent/UserProfile';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="/change-password" element={<ChangePassword />} />
 
         <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="/dashboard/profile" element={<UserProfile />} />
      
         
       </Routes>

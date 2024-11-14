@@ -1,30 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import styles from './DashboardContent.module.css';
 import { StatisticsSection } from './StatisticsSection';
 import { DocumentHistory } from './DocumentHistory';
 import { TransactionHistory } from './TransactionHistory';
 import { PendingTransactions } from './PendingTransactions';
+import { UserProfile } from './UserProfile';
 
 export function DashboardContent() {
   const location = useLocation();
-  const activeView = location.state?.view || 'transactions';
+  const [activeView, setActiveView] = useState(location.state?.view || 'transactions');
   const filter = location.state?.filter;
+
+  useEffect(() => {
+    if (location.state?.view) {
+      setActiveView(location.state.view);
+    }
+  }, [location.state]);
+
+  const renderContent = () => {
+    switch (activeView) {
+      case 'profile':
+        return <UserProfile />;
+      case 'transactions':
+        if (filter === 'pending') {
+          return <PendingTransactions />;
+        } else if (filter === 'Keeping the Document') {
+          return <TransactionHistory filterStatus="Keeping the Document" />;
+        }
+        return <TransactionHistory />;
+      case 'documents':
+        return <DocumentHistory type={filter || null} />;
+      default:
+        return <TransactionHistory />;
+    }
+  };
 
   return (
     <section className={styles.dashboardContent}>
-      <StatisticsSection />
-      {activeView === 'transactions' ? (
-        filter === 'pending' ? (
-          <PendingTransactions />
-        ) : filter === 'Keeping the Document' ? (
-          <TransactionHistory filterStatus="Keeping the Document" />
-        ) : (
-          <TransactionHistory />
-        )
-      ) : (
-        <DocumentHistory type={filter || null} />
-      )}
+      {activeView !== 'profile' && <StatisticsSection />}
+      {renderContent()}
     </section>
   );
 }
