@@ -336,45 +336,49 @@ router.post('/resend-code', async (req, res) => {
 router.post('/google-login', async (req, res) => {
     try {
         const { credential } = req.body;
+        
+        if (!credential) {
+            return res.status(400).json({ error: 'No credential provided' });
+        }
+
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+        
         const ticket = await client.verifyIdToken({
             idToken: credential,
             audience: process.env.GOOGLE_CLIENT_ID
         });
         
         const payload = ticket.getPayload();
-        const googleId = payload.sub;
-
-        if (!payload.email.endsWith('@student.buksu.edu.ph')) {
+        const email = payload.email;
+        
+        if (!email.endsWith('@student.buksu.edu.ph')) {
             return res.status(403).json({ error: 'Please use a BukSU student email' });
         }
 
-        let user = await User.findOne({ 
-            $or: [
-                { googleId: googleId },
-                { email: payload.email }
-            ]
-        });
+        let user = await User.findOne({ email: email });
         
         if (!user) {
+            // Create new user if doesn't exist
             user = new User({
-                username: payload.email.split('@')[0],
-                email: payload.email,
-                googleId: googleId,
-                password: '', // Empty password for Google users
+                username: email.split('@')[0],
+                email: email,
+                googleId: payload.sub,
                 organization: 'Pending',
                 role: 'officer',
                 status: 'pending'
             });
             await user.save();
-        } else if (!user.googleId) {
-            user.googleId = googleId;
-            await user.save();
         }
 
+        // Generate JWT token
         const token = jwt.sign(
-            { id: user._id, role: user.role, status: user.status },
-            JWT_SECRET,
-            { expiresIn: '1h' }
+            { 
+                id: user._id,
+                role: user.role,
+                status: user.status
+            },
+            process.env.JWT_SECRET || 'your-fallback-secret',
+            { expiresIn: '24h' }
         );
 
         res.json({
@@ -386,14 +390,17 @@ router.post('/google-login', async (req, res) => {
                 username: user.username,
                 role: user.role,
                 status: user.status,
-                organization: user.organization,
-                hasPassword: !!user.password
+                organization: user.organization
             }
         });
 
     } catch (error) {
         console.error('Google login error:', error);
-        res.status(500).json({ error: 'Authentication failed' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Authentication failed',
+            details: error.message 
+        });
     }
 });
 
