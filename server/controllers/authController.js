@@ -26,28 +26,36 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
-    const token = jwt.sign({ id: user._id, role: user.role, organization:user.organization}, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
+    const token = jwt.sign(
+      { 
+        id: user._id,
+        role: user.role,
+        status: user.status
+      },
+      process.env.JWT_SECRET || 'your-fallback-secret',
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        organization: user.organization
+      }
     });
-    res.json({ message: 'Login successful', token });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error during login' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
