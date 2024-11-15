@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { isAdmin } = require('../middlewares/auth');
-
 const adminHandler = require('../handlers/adminHandler')
 
 // Add this route first, before other routes
