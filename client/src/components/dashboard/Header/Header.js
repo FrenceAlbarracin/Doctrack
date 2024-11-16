@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { gapi } from 'gapi-script';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
+import axios from 'axios';
 
 const CLIENT_ID = '465216288473-9t6vhd30arvjfjtogqinvbtj9a6vnmjc.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyCAq7zCrb2WvN03qb52D0FHsPfY3OEzO-o';
@@ -13,6 +14,7 @@ export function Header() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [user, setUser] = useState(null);
+  const [profilePicture, setProfilePicture] = useState(null);
   const navigate = useNavigate();
   const profileMenuRef = useRef(null);
   const notificationRef = useRef(null);
@@ -59,9 +61,12 @@ export function Header() {
   const handleProfileClick = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (user?.role === 'admin') {
-      navigate('/admin/profile', { state: { view: 'profile' } });
+      navigate('/admin/profile');
     } else {
-      navigate('/dashboard/profile', { state: { view: 'profile' } });
+      navigate('/dashboard', { 
+        state: { view: 'profile' },
+        replace: true
+      });
     }
     setShowProfileMenu(false);
   };
@@ -103,6 +108,25 @@ export function Header() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:2000/api/users/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      setProfilePicture(response.data.profilePicture);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserProfile();
   }, []);
 
   return (
@@ -157,10 +181,14 @@ export function Header() {
         </div>
         <div className={styles.profileMenuContainer} ref={profileMenuRef}>
           <img 
-            src="https://cdn.builder.io/api/v1/image/assets/TEMP/40de4afe7756242bae0b94bb31dd4d0e506fdfca0602fd790cfcf481e417d257?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a" 
+            src={profilePicture || "https://cdn.builder.io/api/v1/image/assets/TEMP/40de4afe7756242bae0b94bb31dd4d0e506fdfca0602fd790cfcf481e417d257?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a"} 
             alt="User Avatar" 
             className={styles.userAvatar}
             onClick={toggleProfileMenu}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "https://cdn.builder.io/api/v1/image/assets/TEMP/40de4afe7756242bae0b94bb31dd4d0e506fdfca0602fd790cfcf481e417d257?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a";
+            }}
           />
           {showProfileMenu && (
             <div className={styles.profileMenu}>

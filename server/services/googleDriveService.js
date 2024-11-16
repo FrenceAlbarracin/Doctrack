@@ -1,14 +1,14 @@
 const { google } = require('googleapis');
 const path = require('path');
+const { Readable } = require('stream');
 
 class GoogleDriveService {
   constructor() {
-    // Load these from environment variables in production
-    this.GOOGLE_DRIVE_FOLDER_ID = '1PJLdb0e4UYNeYluCsOIhgEPGZhXZaUq2'; // Create a folder in Drive and put its ID here
+    this.GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
     
     const auth = new google.auth.GoogleAuth({
-      keyFile: path.join(__dirname, '../config/google-drive-credentials.json'), // Your credentials file
-      scopes: ['https://www.googleapis.com/auth/drive.file']
+      keyFile: path.join(__dirname, '../config/doctracking-441710-9cd640e20564.json'),
+      scopes: ['https://www.googleapis.com/auth/drive']
     });
 
     this.driveService = google.drive({ version: 'v3', auth });
@@ -16,6 +16,8 @@ class GoogleDriveService {
 
   async uploadFile(fileObject) {
     try {
+      console.log('Attempting to upload file:', fileObject.originalname);
+      
       const fileMetadata = {
         name: fileObject.originalname,
         parents: [this.GOOGLE_DRIVE_FOLDER_ID]
@@ -23,7 +25,7 @@ class GoogleDriveService {
 
       const media = {
         mimeType: fileObject.mimetype,
-        body: fileObject.buffer
+        body: Readable.from(fileObject.buffer)
       };
 
       const response = await this.driveService.files.create({
@@ -32,7 +34,20 @@ class GoogleDriveService {
         fields: 'id,webViewLink'
       });
 
-      return response.data;
+      // Make the file publicly accessible
+      await this.driveService.permissions.create({
+        fileId: response.data.id,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone'
+        }
+      });
+
+      // Create direct link
+      const directLink = `https://drive.google.com/uc?export=view&id=${response.data.id}`;
+
+      console.log('File uploaded successfully:', { ...response.data, directLink });
+      return { ...response.data, directLink };
     } catch (error) {
       console.error('Error uploading to Google Drive:', error);
       throw error;
@@ -52,4 +67,4 @@ class GoogleDriveService {
   }
 }
 
-module.exports = new GoogleDriveService(); 
+module.exports = GoogleDriveService; 

@@ -15,8 +15,10 @@ export function DashboardContent() {
   useEffect(() => {
     if (location.state?.view) {
       setActiveView(location.state.view);
+    } else if (location.pathname.includes('/profile')) {
+      setActiveView('profile');
     }
-  }, [location.state]);
+  }, [location.state, location.pathname]);
 
   const renderContent = () => {
     switch (activeView) {

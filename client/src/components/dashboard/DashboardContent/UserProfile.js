@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './UserProfile.module.css';
-import logo from '../../../assets/logo.png';
+import logo from '../../../assets/SSClogo.png';
 import axios from 'axios';
 import Modal from 'react-modal';
 
@@ -19,9 +19,8 @@ export function UserProfile() {
     organization: '',
     role: '',
     status: '',
-    password: '',
-    confirmPassword: '',
-    profilePicture: '/default-avatar.png'
+    profilePicture: null,
+    driveFileLink: null
   });
   const [organizations, setOrganizations] = useState([]);
 
@@ -62,22 +61,42 @@ export function UserProfile() {
       const token = localStorage.getItem('token');
       const response = await axios.get('http://localhost:2000/api/users/profile', {
         headers: {
-          Authorization: `Bearer ${token}`
+          'Authorization': `Bearer ${token}`
         }
       });
+      
+      console.log('Profile data:', response.data);
+      
+      // Store the complete URL in state
+      const profilePicture = response.data.profilePicture || 'https://via.placeholder.com/150';
 
       setFormData(prev => ({
         ...prev,
         ...response.data,
-        password: '',
-        confirmPassword: ''
+        profilePicture: profilePicture
       }));
+      
+      // Store profile picture URL in localStorage for persistence
+      localStorage.setItem('userProfilePicture', profilePicture);
+      
       setLoading(false);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch profile data');
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setError('Failed to load profile');
       setLoading(false);
     }
   };
+
+  // Add this useEffect to initialize profile picture from localStorage
+  useEffect(() => {
+    const savedProfilePicture = localStorage.getItem('userProfilePicture');
+    if (savedProfilePicture) {
+      setFormData(prev => ({
+        ...prev,
+        profilePicture: savedProfilePicture
+      }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -94,17 +113,16 @@ export function UserProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show loading state
     setLoading(true);
     setError('');
 
-    try {
-      const formData = new FormData();
-      formData.append('profilePicture', file);
+    const formData = new FormData();
+    formData.append('profilePicture', file);
 
+    try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/users/upload-profile-picture`,
+        'http://localhost:2000/api/users/upload-profile-picture',
         formData,
         {
           headers: {
@@ -114,14 +132,23 @@ export function UserProfile() {
         }
       );
 
-      setFormData(prev => ({
-        ...prev,
-        profilePicture: response.data.profilePictureUrl
-      }));
-      setSuccessMessage('Profile picture updated successfully');
+      if (response.data.success) {
+        const newProfilePicture = `http://localhost:2000${response.data.user.profilePicture}`;
+        
+        setFormData(prev => ({
+          ...prev,
+          profilePicture: newProfilePicture
+        }));
+        
+        // Update localStorage with new profile picture URL
+        localStorage.setItem('userProfilePicture', newProfilePicture);
+        
+        setSuccessMessage('Profile picture updated successfully');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      setError(error.response?.data?.message || 'Failed to upload profile picture');
+      console.error('Error uploading profile picture:', error);
+      setError('Failed to upload profile picture');
     } finally {
       setLoading(false);
     }
@@ -164,103 +191,92 @@ export function UserProfile() {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
     <div className={styles.profileContainer}>
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleImageChange}
-        accept="image/*"
-        style={{ display: 'none' }}
-      />
-      
-      <div className={styles.profileCard}>
-        <div className={styles.profileHeader}>
-          <div className={styles.avatarContainer}>
-            <div 
-              className={styles.avatar} 
-              onClick={handleImageClick}
-              style={{ cursor: 'pointer' }}
-            >
-              <img 
+      {loading ? (
+        <div className={styles.loading}>Loading profile...</div>
+      ) : error ? (
+        <div className={styles.error}>{error}</div>
+      ) : (
+        <div className={styles.profileCard}>
+          <div className={styles.profileHeader}>
+            <div className={styles.profilePictureContainer} onClick={handleImageClick}>
+              <img
                 src={formData.profilePicture}
-                alt="Profile" 
-                className={styles.avatarImage}
+                alt="Profile"
+                className={styles.profilePicture}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/150';
+                }}
               />
-              <div className={styles.cameraIcon} onClick={handleImageClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+            </div>
+            <h1>Profile Information</h1>
+          </div>
+
+          <div className={styles.profileContent}>
+            <div className={styles.profileForm}>
+              <div className={styles.formGroup}>
+                <label>Username</label>
+                <input 
+                  type="text" 
+                  value={formData.username}
+                  disabled
+                  className={styles.formInput}
+                />
               </div>
-            </div>
-          </div>
-          <h1>Profile Information</h1>
-        </div>
 
-        <div className={styles.profileContent}>
-          <div className={styles.profileForm}>
-            <div className={styles.formGroup}>
-              <label>Username</label>
-              <input 
-                type="text" 
-                value={formData.username}
-                disabled
-                className={styles.formInput}
-              />
-            </div>
+              <div className={styles.formGroup}>
+                <label>Email</label>
+                <input 
+                  type="email" 
+                  value={formData.email}
+                  disabled
+                  className={styles.formInput}
+                />
+              </div>
 
-            <div className={styles.formGroup}>
-              <label>Email</label>
-              <input 
-                type="email" 
-                value={formData.email}
-                disabled
-                className={styles.formInput}
-              />
-            </div>
+              <div className={styles.formGroup}>
+                <label>Organization</label>
+                <input 
+                  type="text" 
+                  value={formData.organization}
+                  disabled
+                  className={styles.formInput}
+                />
+              </div>
 
-            <div className={styles.formGroup}>
-              <label>Organization</label>
-              <input 
-                type="text" 
-                value={formData.organization}
-                disabled
-                className={styles.formInput}
-              />
-            </div>
+              <div className={styles.formGroup}>
+                <label>Role</label>
+                <input 
+                  type="text" 
+                  value={formData.role}
+                  disabled
+                  className={styles.formInput}
+                />
+              </div>
 
-            <div className={styles.formGroup}>
-              <label>Role</label>
-              <input 
-                type="text" 
-                value={formData.role}
-                disabled
-                className={styles.formInput}
-              />
+              <button 
+                className={styles.editButton}
+                onClick={() => setIsModalOpen(true)}
+              >
+                Edit Profile
+              </button>
             </div>
 
-            <button 
-              className={styles.editButton}
-              onClick={() => setIsModalOpen(true)}
-            >
-              Edit Profile
-            </button>
-          </div>
-
-          <div className={styles.logoSection}>
-            <img src={logo} alt="BSU Logo" className={styles.bsuLogo} />
+            <div className={styles.logoSection}>
+              <img src={logo} alt="BSU Logo" className={styles.bsuLogo} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {isModalOpen && (
         <Modal
@@ -277,7 +293,7 @@ export function UserProfile() {
               </div>
             )}
           </div>
-          <form onSubmit={handleSubmit} className={styles.modalForm}>
+          <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.formGroup}>
               <label>Username</label>
               <input 
@@ -286,6 +302,7 @@ export function UserProfile() {
                 value={formData.username}
                 onChange={handleChange}
                 className={styles.formInput}
+                disabled={formData.role === 'admin'}
               />
             </div>
 
@@ -297,6 +314,7 @@ export function UserProfile() {
                 value={formData.email}
                 onChange={handleChange}
                 className={styles.formInput}
+                disabled={true}
               />
             </div>
 
@@ -307,7 +325,7 @@ export function UserProfile() {
                 value={formData.organization}
                 onChange={handleChange}
                 className={styles.formInput}
-                disabled={formData.role === ''}
+                disabled={formData.role === 'admin'}
               >
                 <option value="">Select Organization</option>
                 <optgroup label="USG/Institutional">
@@ -356,6 +374,7 @@ export function UserProfile() {
                 value={formData.role}
                 onChange={handleChange}
                 className={styles.formInput}
+                disabled={true}
               />
             </div>
 

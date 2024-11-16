@@ -1,10 +1,11 @@
 // userController.js
-const User = require('../models/UserLoginModel'); // Changed from UsersModel to UserLoginModel
+const User = require('../models/UserLoginModel');
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const GoogleDriveService = require('../services/googleDriveService');
-const Users = require('../models/UsersModel');
+const driveService = new GoogleDriveService();
 
 class UserController {
   // Create a new user
@@ -112,31 +113,27 @@ class UserController {
   }
   static async getUserProfile(req, res) {
     try {
-        if (!req.user || !req.user.id) {
-            return res.status(401).json({ message: 'User not authenticated' });
-        }
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
 
-        const user = await User.findById(req.user.id)
-            .select('-password')
-            .lean();
-        
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const profilePicture = user.profilePicture 
+        ? `${baseUrl}${user.profilePicture}`
+        : null;
 
-        return res.status(200).json({
-            username: user.username || '',
-            email: user.email || '',
-            organization: user.organization || '',
-            role: user.role || '',
-            status: user.status || '',
-            profilePicture: user.profilePicture || '/default-avatar.png'
-        });
+      res.json({
+        username: user.username,
+        email: user.email,
+        organization: user.organization,
+        role: user.role,
+        status: user.status,
+        profilePicture: profilePicture
+      });
     } catch (error) {
-        console.error('getUserProfile error:', error);
-        return res.status(500).json({ 
-            message: 'Error retrieving user profile'
-        });
+      console.error('Error retrieving profile:', error);
+      res.status(500).json({ message: 'Error retrieving user profile' });
     }
   }
   static async updateProfile(req, res) {
@@ -219,33 +216,52 @@ class UserController {
         return res.status(400).json({ message: 'No file uploaded' });
       }
 
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(req.file.mimetype)) {
-        return res.status(400).json({ message: 'Invalid file type. Only JPEG, PNG and GIF are allowed.' });
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(__dirname, '../uploads/profiles');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
       }
 
-      // Upload to Google Drive
-      const driveResponse = await GoogleDriveService.uploadFile(req.file);
+      // Save file locally
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+      const localFilePath = path.join(uploadsDir, fileName);
+      fs.writeFileSync(localFilePath, req.file.buffer);
 
-      // Update user profile
-      const user = await Users.findById(req.user.id);
-      
-      // If there's an existing profile picture, delete it from Drive
-      if (user.profilePictureId) {
+      // Upload to Google Drive
+      const driveResponse = await driveService.uploadFile(req.file);
+
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Delete old profile picture if exists
+      if (user.profilePictureId && user.localProfilePath) {
         try {
-          await GoogleDriveService.deleteFile(user.profilePictureId);
-        } catch (deleteError) {
-          console.error('Error deleting old profile picture:', deleteError);
+          await driveService.deleteFile(user.profilePictureId);
+          const oldLocalPath = path.join(uploadsDir, user.localProfilePath);
+          if (fs.existsSync(oldLocalPath)) {
+            fs.unlinkSync(oldLocalPath);
+          }
+        } catch (error) {
+          console.error('Error deleting old profile picture:', error);
         }
       }
 
-      // Update user with new profile picture details
-      await user.updateProfilePicture(driveResponse.id, driveResponse.webViewLink);
+      // Update user profile
+      user.profilePictureId = driveResponse.id;
+      user.profilePicture = `/uploads/profiles/${fileName}`;
+      user.driveFileLink = driveResponse.directLink;
+      user.localProfilePath = fileName;
+      await user.save();
 
       res.json({
         success: true,
-        profilePictureUrl: driveResponse.webViewLink
+        user: {
+          ...user.toObject(),
+          profilePicture: `/uploads/profiles/${fileName}`
+        },
+        message: 'Profile picture updated successfully'
       });
 
     } catch (error) {

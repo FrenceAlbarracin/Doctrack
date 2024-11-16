@@ -38,10 +38,16 @@ mongoose.connect(process.env.MONGODB_URI)
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Create uploads directory if it doesn't exist
+// Create uploads and profiles directories if they don't exist
 const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
+const uploadsDir = path.join(__dirname, 'uploads');
+const profilesDir = path.join(__dirname, 'uploads/profiles');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+if (!fs.existsSync(profilesDir)) {
+  fs.mkdirSync(profilesDir);
 }
 
 const PORT = process.env.PORT || 2000 || 3000;
