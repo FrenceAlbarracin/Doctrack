@@ -323,6 +323,12 @@ authRoutesHandler.googleLogin = async (req, res) => {
             return res.status(400).json({ error: 'No credential provided' });
         }
 
+        // Make sure GOOGLE_CLIENT_ID is properly set in your environment
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            console.error('GOOGLE_CLIENT_ID is not configured');
+            return res.status(500).json({ error: 'OAuth configuration error' });
+        }
+
         const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
         
         const ticket = await client.verifyIdToken({
@@ -381,7 +387,7 @@ authRoutesHandler.googleLogin = async (req, res) => {
         res.status(500).json({ 
             success: false,
             error: 'Authentication failed',
-            details: error.message 
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 }
