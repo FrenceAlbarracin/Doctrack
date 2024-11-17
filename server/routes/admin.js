@@ -18,4 +18,4 @@ router.get('/organizations', isAdmin, adminHandler.organizations);
 // Update organization status
 router.put('/organizations/:orgId/status', isAdmin, adminHandler.organizationsStatus);
 
-module.exports = router;
+module.exports = router;  

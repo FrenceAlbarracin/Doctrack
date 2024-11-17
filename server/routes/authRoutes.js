@@ -39,6 +39,6 @@ router.post('/reset-password', authRoutesHandler.resetPassword);
 router.post('/resend-code', authRoutesHandler.resendCode);
 
 // Add this new route
-router.post('/google-login', authRoutesHandler.googleLogin);
+router.post('/google-login', authRoutesHandler.googleLogin);  
 
 module.exports = router;

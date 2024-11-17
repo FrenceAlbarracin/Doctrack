@@ -15,3 +15,4 @@ router.delete('/:id', OrganizationController.deleteOrganization);
 router.get('/', organizationHandler.getOrganization);
 
 module.exports = router;
+ 
