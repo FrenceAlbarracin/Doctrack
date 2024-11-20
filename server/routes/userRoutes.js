@@ -29,22 +29,8 @@ router.get('/all', UserController.getAllUsers);
 router.get('/all/pending', UserController.getPendingUsers);
 router.get('/profile', authenticateToken, UserController.getUserProfile);
 router.put('/update-profile', authenticateToken, UserController.updateProfile);
-//router.post('/upload-profile-picture', authenticateToken, upload.single('profilePicture'), UserController.uploadProfilePicture);
+router.post('/upload-profile-picture', authenticateToken, upload.single('profilePicture'), UserController.uploadProfilePicture);
 
-router.post(
-  '/upload-profile-picture', 
-  authenticateToken, 
-  upload.single('profilePicture'), // This is the correct way to use multer
-  async (req, res) => {
-    try {
-      console.log('File received:', req.file); // Debug log
-      await UserController.uploadProfilePicture(req, res);
-    } catch (error) {
-      console.error('Upload handler error:', error);
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
 
 // Parameterized routes should come last
 router.get('/:id', UserController.getUserById);
