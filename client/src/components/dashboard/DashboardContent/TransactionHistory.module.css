@@ -166,7 +166,7 @@
 
 /* Optional: Add a custom arrow */
 .sortWrapper::after {
-  content: '▼'; /* Custom arrow */
+  content: ''; /* Custom arrow */
   position: absolute;
   right: 10px; /* Positioning */
   top: 50%; /* Center vertically */
@@ -678,6 +678,12 @@
   padding: 15px;
 }
 
+.historyContainer {
+  overflow-y: auto; 
+  max-height: calc(80vh - 100px); 
+  padding-right: 10px; 
+}
+
 .historyEntry {
   position: relative;
   border-left: 2px solid #ccc;
@@ -766,4 +772,19 @@
 
 .historyActionDetails > div:last-child {
   margin-bottom: 0;
+}
+
+.serialNumberButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #666666;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: inherit;
+  font-weight: bold;
+}
+
+.serialNumberButton:hover {
+  color: #004499;
 }

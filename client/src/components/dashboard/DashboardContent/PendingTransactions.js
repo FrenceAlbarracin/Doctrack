@@ -19,6 +19,7 @@ export function PendingTransactions() {
   const [isKeepingModalOpen, setIsKeepingModalOpen] = useState(false);
   const [keepingRemarks, setKeepingRemarks] = useState('');
   const [routePurpose, setRoutePurpose] = useState('');
+  const [documentHistory, setDocumentHistory] = useState(null);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -255,6 +256,40 @@ export function PendingTransactions() {
     }
   };
 
+  const handleSerialNumberClick = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:2000/api/documents/history/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch history');
+      }
+      const historyData = await response.json();
+      setSelectedDocument(id);
+      setDocumentHistory(historyData);
+    } catch (error) {
+      console.error('Error fetching document history:', error);
+      setDocumentHistory([]);
+    }
+  };
+  const formatHistoryDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -309,7 +344,14 @@ export function PendingTransactions() {
           {getSortedData(documents).data.length > 0 ? (
             getSortedData(documents).data.map(doc => (
               <tr key={doc._id}>
-                <td>{doc.serialNumber}</td>
+                <td>
+                  <button 
+                    className={styles.serialNumber} 
+                    onClick={() => handleSerialNumberClick(doc._id)}
+                  >
+                    {doc.serialNumber}
+                  </button>
+                </td>
                 <td>{doc.documentName}</td>
                 <td>{doc.description || '-'}</td>
                 <td>{doc.remarks || '-'}</td>
@@ -344,7 +386,45 @@ export function PendingTransactions() {
           )}
         </tbody>
       </table>
-
+        {/* Popup for document history */}
+        {selectedDocument && (
+                <div className={styles.popup} onClick={(e) => {
+                  if (e.target === e.currentTarget) {
+                    setSelectedDocument(null);
+                    setDocumentHistory(null);
+                  }
+                }}>
+                  <div className={styles.popupContent}>
+                    <div className={styles.popupHeader}>
+                      <h2>Document History for {selectedDocument}</h2>
+                      <button 
+                        className={styles.closeButton}
+                        onClick={() => {
+                          setSelectedDocument(null);
+                          setDocumentHistory(null);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className={styles.historyContainer}>
+                    {!documentHistory ? (
+                      <div>Loading history...</div>
+                    ) : documentHistory.length === 0 ? (
+                      <div>No history available for this document.</div>
+                    ) : (
+                      documentHistory.map((entry, index) => (
+                        <div key={index} className={styles.historyEntry}>
+                          <p className={styles.historyDate}>{formatHistoryDate(entry.date)}</p>
+                          <p className={styles.historyAction}>{entry.action}</p>
+                          <p className={styles.historyDescription}>{entry.description}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  </div>
+                </div>
+              )}
       <div className={styles.pagination}>
         <button 
           onClick={() => handlePageChange(currentPage - 1)}
