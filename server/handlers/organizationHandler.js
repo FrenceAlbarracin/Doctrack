@@ -1,5 +1,7 @@
 organizationHandler={}
 
+const Organization = require('../models/Organization');
+
 organizationHandler.getOrganization = async (req, res) => {
     try {
       const organizations = await Organization.find({ status: 'active' })
