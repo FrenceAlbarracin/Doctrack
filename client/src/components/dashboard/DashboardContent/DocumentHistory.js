@@ -233,7 +233,7 @@ export function DocumentHistory({ type }) {
             <th>Document Name</th>
             <th>Description</th>
             <th>Remarks</th>
-            <th>Recipient</th>
+            <th>Sender</th>
             <th>Date Created</th>
             <th>Status</th>
           </tr>
@@ -253,7 +253,7 @@ export function DocumentHistory({ type }) {
                 <td>{doc.documentName}</td>
                 <td>{doc.description}</td>
                 <td>{doc.remarks}</td>
-                <td>{doc.recipient}</td>
+                <td>{doc.originalSender || '-'}</td>
                 <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
                 <td>{doc.status}</td>
               </tr>

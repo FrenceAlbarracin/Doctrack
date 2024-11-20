@@ -113,39 +113,24 @@ export function UserProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Add debug logging
-    console.log('File details:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
+    setLoading(true);
+    setError('');
 
     const formData = new FormData();
     formData.append('profilePicture', file);
 
     try {
       const token = localStorage.getItem('token');
-      console.log('Token:', token); // Verify token exists
-
       const response = await axios.post(
         'http://localhost:2000/api/users/upload-profile-picture',
         formData,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-          // Add this to see detailed error responses
-          validateStatus: (status) => true
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
-
-      // Log full response for debugging
-      console.log('Upload response:', response);
-
-      if (response.status !== 200) {
-        throw new Error(`Upload failed: ${response.data.message || 'Unknown error'}`);
-      }
 
       if (response.data.success) {
         const newProfilePicture = `http://localhost:2000${response.data.user.profilePicture}`;
@@ -162,8 +147,8 @@ export function UserProfile() {
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
-      console.error('Upload error details:', error.response || error);
-      setError(error.response?.data?.message || 'Failed to upload profile picture');
+      console.error('Error uploading profile picture:', error);
+      setError('Failed to upload profile picture');
     } finally {
       setLoading(false);
     }

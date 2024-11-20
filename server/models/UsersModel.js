@@ -37,6 +37,9 @@ const userSchema = new mongoose.Schema({
         enum: ['officer', 'admin'],
         default: 'officer',
     },
+    documentHistory:{
+        type: Array
+    },
     status: {
         type: String,
         enum: ['pending', 'active', 'inactive'],
