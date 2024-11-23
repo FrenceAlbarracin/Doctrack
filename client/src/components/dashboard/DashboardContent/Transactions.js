@@ -9,7 +9,8 @@ const Transactions = ({ organization }) => {
 
     const [documents, setDocuments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    
+    const [selectedDocument, setSelectedDocument] = useState(null);
+    const [documentHistory, setDocumentHistory] = useState(null);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState('newest');
@@ -91,6 +92,32 @@ const Transactions = ({ organization }) => {
     };
   };
 
+  const handleSerialNumberClick = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:2000/api/documents/history/${id}`);
+      setSelectedDocument(id);
+      setDocumentHistory(response.data);
+    } catch (error) {
+      console.error('Error fetching document history:', error);
+      setDocumentHistory([]);
+    }
+  };
+
+  const formatHistoryDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
   // Render pagination
   const renderPagination = (totalPages) => (
     <div className={styles.pagination}>
@@ -189,7 +216,14 @@ const Transactions = ({ organization }) => {
           {getFilteredData(documents).data.length > 0 ? (
             getFilteredData(documents).data.map(doc => (
               <tr key={doc._id}>
-                <td>{doc.serialNumber}</td>
+                <td>
+                  <button 
+                    className={styles.serialNumber} 
+                    onClick={() => handleSerialNumberClick(doc._id)}
+                  >
+                    {doc.serialNumber}
+                  </button>
+                </td>
                 <td>{doc.documentName}</td>
                 <td>{doc.description || '-'}</td>
                 <td>
@@ -223,6 +257,68 @@ const Transactions = ({ organization }) => {
       </table>
       {renderPagination(getFilteredData(documents).totalPages)}
     </div>
+
+    {selectedDocument && documentHistory && (
+        <div className={styles.popup} onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setSelectedDocument(null);
+            setDocumentHistory(null);
+          }
+        }}>
+          <div className={styles.popupContent}>
+            <div className={styles.popupHeader}>
+              <h2>Document History</h2>
+              <button 
+                className={styles.closeButton}
+                onClick={() => {
+                  setSelectedDocument(null);
+                  setDocumentHistory(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.historyContent}>
+              {documentHistory.map((entry, index) => (
+                <div key={index} className={styles.historyEntry}>
+                  <div className={styles.historyHeader}>
+                    <span className={styles.historyDate}>
+                      {formatHistoryDate(entry.date)}
+                    </span>
+                    <span className={`${styles.historyAction} ${styles[entry.action.toLowerCase().replace(/\s+/g, "")]}`}>
+                      {entry.action}
+                    </span>
+                  </div>
+                  <div className={styles.historyOffice}>
+                    {entry.office}
+                  </div>
+                  <div className={styles.historyActionDetails}>
+                    {entry.details?.forwardedFrom && (
+                      <div className={styles.forwardedFrom}>
+                        Forwarded From: {entry.details.forwardedFrom}
+                      </div>
+                    )}
+                    {entry.details?.description && (
+                      <div>Description: {entry.details.description}</div>
+                    )}
+                    {entry.details?.remarks && (
+                      <div>Remarks: {entry.details.remarks}</div>
+                    )}
+                    {entry.description && !entry.details?.description && (
+                      <div>Actions Taken: {entry.description}</div>
+                    )}
+                  </div>
+                  {entry.details?.forwardTo && (
+                    <div className={styles.historyForward}>
+                      Forwarded to: {entry.details.forwardTo}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
