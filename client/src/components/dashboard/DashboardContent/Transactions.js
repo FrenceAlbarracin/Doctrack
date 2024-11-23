@@ -45,13 +45,32 @@ const Transactions = ({ organization }) => {
 
     // Apply search filter
     if (searchTerm) {
-      filteredData = filteredData.filter(item =>
-        item.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.currentOffice.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const searchLower = searchTerm.toLowerCase();
+      filteredData = filteredData.filter(item => {
+        // Format the date for searching
+        const formattedDate = new Date(item.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).toLowerCase();
+
+        // Get display status for searching
+        const displayStatus = item.status === 'Accept' || item.status === 'accept' ? 'IN TRANSIT' :
+                            item.status === 'Pending' || item.status === 'pending' ? 'IN PROCESS' :
+                            item.status;
+
+        return (
+          item.documentName.toLowerCase().includes(searchLower) ||
+          item.serialNumber.toLowerCase().includes(searchLower) ||
+          item.description?.toLowerCase().includes(searchLower) ||
+          item.recipient.toLowerCase().includes(searchLower) ||
+          item.currentOffice.toLowerCase().includes(searchLower) ||
+          displayStatus.toLowerCase().includes(searchLower) ||
+          formattedDate.includes(searchLower)
+        );
+      });
     }
 
     // Apply sorting
@@ -167,8 +186,8 @@ const Transactions = ({ organization }) => {
           </tr>
         </thead>
         <tbody>
-          {documents.length > 0 ? (
-            documents.map(doc => (
+          {getFilteredData(documents).data.length > 0 ? (
+            getFilteredData(documents).data.map(doc => (
               <tr key={doc._id}>
                 <td>{doc.serialNumber}</td>
                 <td>{doc.documentName}</td>
@@ -187,8 +206,8 @@ const Transactions = ({ organization }) => {
                   year: 'numeric',
                   month: 'short',
                   day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
+                //   hour: '2-digit',
+                //   minute: '2-digit'
                 })}</td>
                 <td>{doc.currentOffice}</td>
               </tr>
@@ -202,6 +221,7 @@ const Transactions = ({ organization }) => {
           )}
         </tbody>
       </table>
+      {renderPagination(getFilteredData(documents).totalPages)}
     </div>
     </section>
   );
