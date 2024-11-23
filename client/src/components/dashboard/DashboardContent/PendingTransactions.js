@@ -20,6 +20,7 @@ export function PendingTransactions() {
   const [keepingRemarks, setKeepingRemarks] = useState('');
   const [routePurpose, setRoutePurpose] = useState('');
   const [documentHistory, setDocumentHistory] = useState(null);
+  const [historyDocument, setHistoryDocument] = useState(null);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -268,7 +269,7 @@ export function PendingTransactions() {
         throw new Error('Failed to fetch history');
       }
       const historyData = await response.json();
-      setSelectedDocument(id);
+      setHistoryDocument(id);
       setDocumentHistory(historyData);
     } catch (error) {
       console.error('Error fetching document history:', error);
@@ -387,44 +388,39 @@ export function PendingTransactions() {
         </tbody>
       </table>
         {/* Popup for document history */}
-        {selectedDocument && (
-                <div className={styles.popup} onClick={(e) => {
-                  if (e.target === e.currentTarget) {
-                    setSelectedDocument(null);
+        {historyDocument && documentHistory && (
+          <div className={styles.popup}>
+            <div className={styles.popupContent}>
+              <div className={styles.popupHeader}>
+                <h2>Document History for {documentHistory[0]?.serialNumber || 'Document'}</h2>
+                <button 
+                  className={styles.closeButton}
+                  onClick={() => {
+                    setHistoryDocument(null);
                     setDocumentHistory(null);
-                  }
-                }}>
-                  <div className={styles.popupContent}>
-                    <div className={styles.popupHeader}>
-                      <h2>Document History for {selectedDocument}</h2>
-                      <button 
-                        className={styles.closeButton}
-                        onClick={() => {
-                          setSelectedDocument(null);
-                          setDocumentHistory(null);
-                        }}
-                      >
-                        ×
-                      </button>
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div className={styles.historyContainer}>
+                {!documentHistory ? (
+                  <div>Loading history...</div>
+                ) : documentHistory.length === 0 ? (
+                  <div>No history available for this document.</div>
+                ) : (
+                  documentHistory.map((entry, index) => (
+                    <div key={index} className={styles.historyEntry}>
+                      <p className={styles.historyDate}>{formatHistoryDate(entry.date)}</p>
+                      <p className={styles.historyAction}>{entry.action}</p>
+                      <p className={styles.historyDescription}>{entry.description}</p>
                     </div>
-                    <div className={styles.historyContainer}>
-                    {!documentHistory ? (
-                      <div>Loading history...</div>
-                    ) : documentHistory.length === 0 ? (
-                      <div>No history available for this document.</div>
-                    ) : (
-                      documentHistory.map((entry, index) => (
-                        <div key={index} className={styles.historyEntry}>
-                          <p className={styles.historyDate}>{formatHistoryDate(entry.date)}</p>
-                          <p className={styles.historyAction}>{entry.action}</p>
-                          <p className={styles.historyDescription}>{entry.description}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  </div>
-                </div>
-              )}
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       <div className={styles.pagination}>
         <button 
           onClick={() => handlePageChange(currentPage - 1)}

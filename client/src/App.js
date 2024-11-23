@@ -7,6 +7,7 @@ import AdminDashboard from './components/dashboard/admin/AdminDashboard';
 import ForgotPassword from './components/ForgotPassword';
 import EnterCode from './components/EnterCode';
 import ChangePassword from './components/ChangePassword';
+import Transactions from './components/dashboard/DashboardContent/Transactions';
 
 import AdminRoutes from './components/dashboard/admin/AdminRoutes';
 import { UserProfile } from './components/dashboard/DashboardContent/UserProfile';
@@ -27,7 +28,7 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/enter-code" element={<EnterCode />} />
         <Route path="/change-password" element={<ChangePassword />} />
-
+        <Route path="/dashboard/transactions" element={<Transactions />} />
         <Route path="/admin/*" element={<AdminRoutes />} />
         <Route path="/dashboard/profile" element={<UserProfile />} />
      

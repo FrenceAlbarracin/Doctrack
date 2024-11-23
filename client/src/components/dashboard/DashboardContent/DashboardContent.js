@@ -6,11 +6,13 @@ import { DocumentHistory } from './DocumentHistory';
 import { TransactionHistory } from './TransactionHistory';
 import { PendingTransactions } from './PendingTransactions';
 import { UserProfile } from './UserProfile';
+import Transactions from './Transactions';
 
 export function DashboardContent() {
   const location = useLocation();
   const [activeView, setActiveView] = useState(location.state?.view || 'transactions');
   const filter = location.state?.filter;
+  const organization = location.state?.organization;
 
   useEffect(() => {
     if (location.state?.view) {
@@ -29,6 +31,8 @@ export function DashboardContent() {
           return <PendingTransactions />;
         } else if (filter === 'Keeping the Document') {
           return <TransactionHistory filterStatus="Keeping the Document" />;
+        } else if (filter === 'all') {
+          return <Transactions organization={organization} />;
         }
         return <TransactionHistory />;
       case 'documents':

@@ -17,8 +17,7 @@ const sendVerificationCode = async (email, code) => {
       <h1>Password Reset Request</h1>
       <p>Your verification code is: <strong>${code}</strong></p>
       <p>This code will expire in 10 minutes.</p>
-      <p>If you didn't request this, please ignore this email.</p>
-    `
+      <p>If you didn't request this, please ignore this email.</p>`
   };
 
   try {

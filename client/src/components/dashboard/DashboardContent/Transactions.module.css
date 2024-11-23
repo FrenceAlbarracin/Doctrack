@@ -72,12 +72,23 @@
     color: #fff;
     border: 1px solid #ff8a00;
   }
+  .accept, .pending, .rejected, .delivered {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap; /* Prevent text wrapping */
+    text-align: center;
+    min-width: 80px; /* Set minimum width */
+    max-width: fit-content; /* Allow expansion if needed */
+  }
   
-  .pending {
+  /* .pending {
     background-color: rgba(46, 22, 192, 0.38);
     color: #00058b;
     border: 1px solid #0007b0;
-  }
+  } */
   
   
   .rejected {
@@ -383,7 +394,7 @@
   transition: all 0.2s;
 }
 
-.accept {
+/* .accept {
   background-color: #4CAF50;
   color: white;
 }
@@ -399,7 +410,7 @@
 
 .pending:hover {
   background-color: #f57c00;
-}
+} */
 
 .statusButton:hover {
   opacity: 0.9;
@@ -858,7 +869,7 @@
 }
 
 /* Modify existing status styles to match your current design */
-.pending {
+/* .pending {
   background-color: rgba(46, 22, 192, 0.38);
   color: #00058b;
   border: 1px solid #0007b0;
@@ -868,9 +879,9 @@
   font-weight: 500;
   width: 100px;
   text-align: center;
-}
+} */
 
-.accept {
+/* .accept {
   background-color: #4CAF50;
   color: white;
   border: 1px solid #45a049;
@@ -880,7 +891,7 @@
   font-weight: 500;
   width: 100px;
   text-align: center;
-}
+} */
 
 /* Add styles for the status dropdown in "All" view */
 .statusDropdown.all {
