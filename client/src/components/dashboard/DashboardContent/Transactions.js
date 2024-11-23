@@ -227,11 +227,15 @@ const Transactions = ({ organization }) => {
                 <td>{doc.documentName}</td>
                 <td>{doc.description || '-'}</td>
                 <td>
-                <span className={styles[doc.status.toLowerCase()]}>
+                <span className={styles[
+                    doc.status === 'Keeping the Document' ? 'done' :
+                    doc.status.toLowerCase().replace(/\s+/g, '')]}>
                     {doc.status === 'Accept' ? 'IN TRANSIT' : 
                     doc.status === 'Pending' ? 'IN PROCESS' : 
                     doc.status === 'accept' ? 'IN TRANSIT' : 
-                    doc.status === 'pending' ? 'IN PROCESS' : 
+                    doc.status === 'pending' ? 'IN PROCESS' :
+                    doc.status === 'Keeping the Document' ? 'DONE' :
+                    
                     doc.status}
                 </span>
                 </td>

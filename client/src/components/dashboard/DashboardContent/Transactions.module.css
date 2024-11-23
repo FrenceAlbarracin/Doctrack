@@ -845,7 +845,42 @@
   padding: 4px 8px;
   border-radius: 4px;
 }
+.done {
+    background-color: #72CE01; /* Blue color */
+    color: #e1f8e6;
+    padding: 3px 26px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  
 
+.keeping-the-document{
+    background-color: #2196F3; /* Blue color */
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    display: inline-block;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+    transition: all 0.3s ease;
+}
+
+.Keeping-the-Document{
+    background-color: #2196F3; /* Blue color */
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    display: inline-block;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+    transition: all 0.3s ease;
+}
 .finished {
   background: #cce5ff;
   color: #004085;
