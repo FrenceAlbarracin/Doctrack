@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { gapi } from 'gapi-script';
 import { useNavigate } from 'react-router-dom';
+import { FaRegCalendarAlt } from 'react-icons/fa';
 import styles from './Header.module.css';
 import axios from 'axios';
 
@@ -138,39 +139,9 @@ export function Header() {
       <div className={styles.userSection}>
         <nav className={styles.headerNav}>
           <div className={styles.calendarIconContainer} onClick={toggleCalendar}>
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/1eaec27ef17cb768bc36b6df35592458c456fe90ea0a0b8123d7cff5a8423a8a?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a"
-              alt="Calendar Icon"
+          <FaRegCalendarAlt 
+              className={styles.calendarIcon}
             />
-          </div>
-          <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/804b63a8ef2260387a5f1c1092038331b625470de795379c107be68e67034a35?placeholderIfAbsent=true&apiKey=1194e150faa74888af77be55eb83006a" alt="Settings Icon" className={styles.settingsIcon} />
-          <div className={styles.notificationIconContainer} ref={notificationRef}>
-            <svg
-              className={styles.notificationIcon}
-              onClick={toggleNotifications}
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            {showNotifications && (
-              <div className={styles.notificationDropdown}>
-                <h3>Notifications</h3>
-                <ul>
-                  <li>New message from John Doe</li>
-                  <li>Your report is ready</li>
-                  <li>Meeting scheduled for tomorrow</li>
-                </ul>
-              </div>
-            )}
           </div>
         </nav>
         <div className={styles.userInfo}>
