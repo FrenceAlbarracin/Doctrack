@@ -29,4 +29,36 @@ const sendVerificationCode = async (email, code) => {
   }
 };
 
-module.exports = { sendVerificationCode }; 
+const sendDocumentNotification = async (orgEmail, documents, organization) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: orgEmail,
+    subject: 'New Documents Received',
+    html: `
+      <h2>New Documents Received</h2>
+      <p>The following documents have been received for ${organization}:</p>
+      <ul>
+        ${documents.map(doc => `
+          <li>
+            Document: ${doc.documentName}<br>
+            Serial Number: ${doc.serialNumber}<br>
+            From: ${doc.originalSender}
+          </li>
+        `).join('')}
+      </ul>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Email sending error:', error);
+    return false;
+  }
+};
+
+module.exports = { 
+  sendVerificationCode,
+  sendDocumentNotification 
+}; 

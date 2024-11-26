@@ -2,6 +2,7 @@ const documentHandler = {};
 
 const Document = require('../models/Document');
 const DocumentHistory = require('../models/DocumentHistory');
+const notificationHandler = require('./notificationHandler');
 
 
 
@@ -60,6 +61,9 @@ documentHandler.newDocument = async(req, res)=>{
         });
     
         await newDocument.save();
+        
+        // Send notification after document is created
+        await notificationHandler.sendDocumentNotification(newDocument);
     
         // Create history entry
         const history = new DocumentHistory({
@@ -325,6 +329,9 @@ documentHandler.forward = async(req, res) => {
             },
             { new: true }
         );
+
+        // Send notification to new recipient
+        await notificationHandler.sendDocumentNotification(updatedDocument);
 
         // Create history entry
         const historyDescription = `Document forwarded from ${forwardedFrom} to ${forwardTo}`;
